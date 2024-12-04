@@ -1,0 +1,24 @@
+/* Position zoom controls */
+.ol-zoom {
+    @apply fixed !left-[calc(20rem_+_0.5rem)] top-2 z-50 flex flex-col gap-2;
+    background: transparent;
+  }
+  
+  /* Style for both zoom buttons */
+  .ol-zoom .ol-zoom-in,
+  .ol-zoom .ol-zoom-out {
+    @apply w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-gray-50 transition-colors border border-gray-200;
+    margin: 0;
+  }
+  
+  /* Remove default OpenLayers styles */
+  .ol-zoom button {
+    position: static;
+    width: auto;
+    height: auto;
+  }
+  
+  /* Additional hover effect */
+  .ol-zoom button:hover {
+    @apply bg-gray-50;
+  }
