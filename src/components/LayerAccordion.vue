@@ -299,6 +299,10 @@
               <span>WebAtlasDe.light</span>
             </label>
             <label class="flex items-center space-x-2">
+              <input type="radio" name="background" value="terrain" v-model="selectedBackground" @change="changeBackground">
+              <span>Terrain</span>
+            </label>
+            <label class="flex items-center space-x-2">
               <input type="radio" name="background" value="luftbilder" v-model="selectedBackground" @change="changeBackground">
               <span>Luftbilder WMS DOP 20</span>
             </label>

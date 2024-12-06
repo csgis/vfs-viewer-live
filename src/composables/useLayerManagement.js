@@ -6,6 +6,7 @@ import ImageWMS from 'ol/source/ImageWMS'
 import OSM from 'ol/source/OSM'
 import TileLayer from 'ol/layer/Tile'
 import TileWMS from 'ol/source/TileWMS'
+import XYZ from 'ol/source/XYZ'
 import { useUIStore } from '../stores/uiStore'
 
 export function useLayerManagement(map) {
@@ -27,7 +28,8 @@ export function useLayerManagement(map) {
     'kartiergebiete',
     'trinkwasser',
     'landschaftsschutz',
-    'naturschutz'
+    'naturschutz',
+    'alkisParzellarkarte'
   ])
 
   const layers = ref({
@@ -39,7 +41,8 @@ export function useLayerManagement(map) {
     trinkwasser: false,
     landschaftsschutz: false,
     naturschutz: false,
-    soilNutrients: false
+    soilNutrients: false,
+    alkisParzellarkarte: false,
   })
 
   const getAttributionForBackground = (type) => {
@@ -47,7 +50,8 @@ export function useLayerManagement(map) {
       none: '',
       osm: '© OpenStreetMap contributors',
       webatlas: '© GeoBasis-DE/BKG',
-      luftbilder: '© Bayerische Vermessungsverwaltung'
+      luftbilder: '© Bayerische Vermessungsverwaltung',
+      terrain: '© tiles.stadiamaps.com'
     }
     return attributions[type] || ''
   }
@@ -66,7 +70,8 @@ export function useLayerManagement(map) {
     trinkwasser: 'schutzgebiete:twsg',
     landschaftsschutz: 'schutzgebiete:landschafts',
     naturschutz: 'schutzgebiete:natur',
-    soilNutrients: '0'
+    soilNutrients: '0',
+    alkisParzellarkarte: 'by_alkis_parzellarkarte_umr_schwarz'
   }
 
   const getLayerLabel = (layerName) => {
@@ -79,7 +84,8 @@ export function useLayerManagement(map) {
       soilNutrients: 'Boden Typ',
       trinkwasser: 'Trinkwasserschutzgebiete',
       landschaftsschutz: 'Landschaftsschutzgebiete',
-      naturschutz: 'Naturschutzgebiete'
+      naturschutz: 'Naturschutzgebiete',
+      alkisParzellarkarte: 'ALKIS Parzellarkarte'
     }
     return labels[layerName] || layerName
   }
@@ -93,6 +99,10 @@ export function useLayerManagement(map) {
       soilNutrients: {
         url: 'https://services.bgr.de/wms/boden/buek1000de/',
         version: '1.3.0'
+      },
+      alkisParzellarkarte: { 
+        url: 'https://geoservices.bayern.de/od/wms/alkis/v1/parzellarkarte',
+        version: '1.3.0'
       }
     }
 
@@ -102,7 +112,8 @@ export function useLayerManagement(map) {
       landkreis: 3,
       gemeinde: 4,
       flurkartenSchnitt: 5,
-      kartiergebiete: 10
+      kartiergebiete: 10,
+      alkisParzellarkarte: 6
     }
 
     const config = wmsConfig[layerName] || wmsConfig.default
@@ -130,7 +141,7 @@ export function useLayerManagement(map) {
 
   const createBackgroundLayer = (type) => {
     if (type === 'none') return null
-
+  
     const sources = {
       osm: () => new OSM({
         crossOrigin: 'anonymous',
@@ -146,6 +157,11 @@ export function useLayerManagement(map) {
         crossOrigin: 'anonymous',
         wrapX: false
       }),
+      terrain: () => new XYZ({
+        url: 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}.png',
+        crossOrigin: 'anonymous',
+        maxZoom: 18
+      }),
       luftbilder: () => new TileWMS({
         url: 'https://geoservices.bayern.de/od/wms/dop/v1/dop20',
         params: {
@@ -157,9 +173,9 @@ export function useLayerManagement(map) {
         wrapX: false
       })
     }
-
+  
     if (!sources[type]) return null
-
+  
     return new TileLayer({
       source: sources[type](),
       zIndex: 0,
@@ -176,6 +192,11 @@ export function useLayerManagement(map) {
   }
 
   const getLegendUrl = (layerName) => {
+    // Special case for ALKIS Parzellarkarte
+    if (layerName === 'alkisParzellarkarte') {
+      return 'https://geodaten.bayern.de/wms/legend/legende_alkis_parzellarkarte_umr.png'
+    }
+  
     const wmsConfig = {
       default: {
         url: 'https://geoserver-vfs.csgis.de/geoserver/wms',
@@ -184,9 +205,13 @@ export function useLayerManagement(map) {
       soilNutrients: {
         url: 'https://services.bgr.de/wms/boden/buek1000de/',
         version: '1.3.0'
+      },
+      alkisParzellarkarte: {
+        url: 'https://geoservices.bayern.de/od/wms/alkis/v1/parzellarkarte',
+        version: '1.3.0'
       }
     }
-
+  
     const config = wmsConfig[layerName] || wmsConfig.default
     const layerSource = layerSources[layerName]
     return `${config.url}?REQUEST=GetLegendGraphic&VERSION=${config.version}&FORMAT=image/png&LAYER=${layerSource}`

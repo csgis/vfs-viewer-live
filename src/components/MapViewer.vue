@@ -70,7 +70,7 @@
       <!-- Home button -->
       <TooltipButton
         tooltip="Startansicht"
-        buttonClass="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-rose-300 transition-colors border border-rose-400"
+        buttonClass="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-rose-300 transition-colors border border-gray-300"
         @click="zoomHomeRef.zoomToHome()"
       >
         <img src="../assets/home.svg" class="h-6 w-6" alt="Home">
@@ -80,7 +80,7 @@
           tooltip="Stadt suchen"
           :buttonClass="`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
             uiStore.activeControl !== 'city-search' 
-              ? 'bg-white hover:bg-rose-300 border-rose-400' 
+              ? 'bg-white hover:bg-rose-300 border-gray-300' 
               : 'bg-rose-300 hover:bg-rose-400 bg-rose-300 text-white'
           }`"
           @click="toggleControl('city-search')"
@@ -91,7 +91,7 @@
       <!-- Help Button -->
       <TooltipButton
         tooltip="Hilfe öffnen"
-        buttonClass="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-rose-300 transition-colors border border-rose-400"
+        buttonClass="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-rose-300 transition-colors border border-gray-300"
         @click="helpRef.openHelp()"
       >
         <img src="../assets/help.svg" class="h-6 w-6" alt="Help">
@@ -102,8 +102,8 @@
         tooltip="Zurück zur vorherigen Ansicht"
         :buttonClass="`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           navigateBackRef?.hasHistory
-            ? 'bg-rose-300 hover:bg-rose-400 border-rose-400' 
-            : 'bg-gray-100 border-rose-400 opacity-50 cursor-not-allowed'
+            ? 'bg-rose-300 hover:bg-rose-400 border-gray-300' 
+            : 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed'
         }`"
         :disabled="!navigateBackRef?.hasHistory"
         @click="navigateBackRef?.goBack"
@@ -121,7 +121,7 @@
         tooltip="Bereich auswählen"
         :buttonClass="`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
             uiStore.activeControl !== 'zoom-extent' 
-            ? 'bg-white hover:bg-rose-300 border-rose-400' 
+            ? 'bg-white hover:bg-rose-300 border-gray-300' 
             : 'bg-rose-300 hover:bg-rose-400 bg-rose-400 text-white'
         }`"
         @click="toggleControl('zoom-extent')"
@@ -134,7 +134,7 @@
         tooltip="Strecke messen"
         :buttonClass="`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.activeControl !== 'measure-line' 
-            ? 'bg-white hover:bg-rose-300 border-rose-400' 
+            ? 'bg-white hover:bg-rose-300 border-gray-3000' 
             : 'bg-rose-300 hover:bg-rose-400 border-rose-400 text-white'
         }`"
         @click="toggleControl('measure-line')"
@@ -147,7 +147,7 @@
         tooltip="Fläche messen"
         :buttonClass="`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.activeControl !== 'measure-area' 
-            ? 'bg-white hover:bg-rose-300 border-rose-400' 
+            ? 'bg-white hover:bg-rose-300 border-gray-300' 
             : 'bg-rose-300 hover:bg-rose-400 border-rose-400 text-white'
         }`"
         @click="toggleControl('measure-area')"
@@ -160,7 +160,7 @@
         tooltip="Karteninhalte abfragen"
         :buttonClass="`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.activeControl !== 'info' 
-            ? 'bg-white hover:bg-rose-300 border-rose-400' 
+            ? 'bg-white hover:bg-rose-300 border-gray-300' 
             : 'bg-rose-300 hover:bg-rose-400 border-rose-400 text-white'
         }`"
         @click="uiStore.toggleControl('info')"
@@ -173,7 +173,7 @@
         tooltip="Karte drucken"
         :buttonClass="`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.activeControl !== 'print' 
-            ? 'bg-white hover:bg-rose-300 border-rose-400' 
+            ? 'bg-white hover:bg-rose-300 border-gray-300' 
             : 'bg-rose-300 hover:bg-rose-400 border-rose-400 text-white'
         }`"
         @click="toggleControl('print')"
