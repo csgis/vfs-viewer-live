@@ -44,7 +44,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-        <div v-show="openSections.mapContents" class="border-t border-gray-300 max-h-96 overflow-y-auto px-2 py-2">
+        <div v-show="openSections.mapContents" class="border-t border-gray-300 max-h-96 overflow-y-auto ps-2 py-2">
           <draggable 
             v-model="layerOrder"
             v-bind="dragOptions"
