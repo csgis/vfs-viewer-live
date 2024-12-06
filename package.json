@@ -14,8 +14,10 @@
     "html2pdf.js": "^0.10.2",
     "jspdf": "^2.5.2",
     "ol": "^10.2.1",
+    "pinia": "^2.3.0",
     "vue": "^3.2.13",
-    "vue-router": "^4.4.5"
+    "vue-router": "^4.4.5",
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
@@ -32,7 +34,8 @@
   "eslintConfig": {
     "root": true,
     "env": {
-      "node": true
+      "node": true,
+      "vue/setup-compiler-macros": true
     },
     "extends": [
       "plugin:vue/vue3-essential",

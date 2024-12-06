@@ -8,11 +8,11 @@
   
   <script setup>
   import { ref, watch, onUnmounted } from 'vue'
-  import { defineProps, defineEmits, defineExpose } from 'vue'
+  import { defineProps, defineExpose } from 'vue'
   import { DragBox } from 'ol/interaction'
   import { Style, Stroke } from 'ol/style'
   import { always } from 'ol/events/condition'
-  
+
   const props = defineProps({
     map: {
       type: Object,
@@ -21,8 +21,7 @@
     active: Boolean
   })
   
-  defineEmits(['close'])
-  
+ 
   const message = ref('Klicken und ziehen Sie auf der Karte, um einen Bereich zu definieren')
   const dragBox = ref(null)
   

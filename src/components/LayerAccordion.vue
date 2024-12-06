@@ -1,23 +1,37 @@
 <template>
   <div class="w-full">
-    <!-- Back Button -->
-    <button 
-      @click="$emit('back')"
-      class="w-full mb-4 p-3 flex items-center text-black-800 hover:bg-gray-700 rounded-lg"
+    <!-- Legend Modal -->
+    <div v-if="showLegendModal" 
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]"
+      @click="closeLegendModal"
     >
-      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-      </svg>
-      Zurück
-    </button>
+      <div class="bg-white rounded-lg p-4 max-w-[90vw] max-h-[90vh] overflow-auto" @click.stop>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">{{ selectedLegendTitle }}</h3>
+          <button @click="closeLegendModal" class="text-gray-500 hover:text-gray-700">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <img 
+          :src="selectedLegendUrl" 
+          :alt="'Legend for ' + selectedLegendTitle"
+          class="max-w-full"
+        />
+      </div>
+    </div>
 
     <!-- Layer Groups -->
     <div class="space-y-2">
       <!-- Map Contents -->
-      <div class="border border-gray-700 rounded-lg overflow-hidden">
+      <div 
+      class="border overflow-hidden rounded-lg" 
+      :class="{ 'bg-zinc-100': openSections.mapContents }"
+      >
         <button 
           @click="toggleSection('mapContents')"
-          class="w-full p-3 flex justify-between items-center bg-gray-800 hover:bg-gray-700"
+          class="w-full p-3 flex justify-between items-center hover:bg-zinc-200 rounded-lg"
         >
           <span class="font-medium">Karteninhalte</span>
           <svg 
@@ -30,49 +44,114 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-        <div v-show="openSections.mapContents" class="p-3 bg-gray-700 border-t border-gray-600 max-h-96 overflow-y-auto">
-          <div class="space-y-2">
-            <!-- Map Layers -->
-            <div 
-              v-for="layerName in layerOrder.filter(name => !['trinkwasser', 'landschaftsschutz', 'naturschutz'].includes(name))" 
-              :key="layerName"
-              class="space-y-1 p-2 cursor-move bg-gray-700 hover:bg-gray-600 rounded transition-colors"
-              :class="{
-                'opacity-50': dragTarget === layerName,
-                'border-t-2 border-blue-500': dragTarget === layerName
-              }"
-              draggable="true"
-              @dragstart="handleDragStart($event, layerName)"
-              @dragend="handleDragEnd"
-              @dragover="handleDragOver"
-              @dragenter="handleDragEnter($event, layerName)"
-              @dragleave="handleDragLeave"
-              @drop="handleDrop($event, layerName)"
-            >
-              <label class="flex items-center space-x-2">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
-                </svg>
-                <input type="checkbox" v-model="layers[layerName]" @change="toggleLayer(layerName)">
-                <span>{{ getLayerLabel(layerName) }}</span>
-              </label>
-              <div v-if="layers[layerName] && legends[layerName]" class="pl-6 mt-1">
-                <img 
-                  :src="legends[layerName]" 
-                  :alt="'Legend for ' + getLayerLabel(layerName)"
-                  class="max-w-full"
-                />
+        <div v-show="openSections.mapContents" class="border-t border-gray-300 max-h-96 overflow-y-auto px-2 py-2">
+          <draggable 
+            v-model="layerOrder"
+            v-bind="dragOptions"
+            item-key="name"
+            class="space-y-2"
+            @change="handleLayerOrderChange"
+          >
+            <template #item="{ element: layerName }">
+              <div 
+                v-if="!['trinkwasser', 'landschaftsschutz', 'naturschutz'].includes(layerName)"
+                class="space-y-1 p-2 bg-white hover:bg-gray-100 rounded transition-colors"
+              >
+                <div class="flex flex-col space-y-2">
+                  <!-- Main Layer Controls -->
+                  <div class="flex items-center">
+                    <!-- Drag Handle -->
+                    <div class="drag-handle cursor-grab p-1">
+                      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                      </svg>
+                    </div>
+                    
+                    <!-- Checkbox and Label -->
+                    <div class="flex-1 flex items-center min-w-0">
+                      <input 
+                        type="checkbox" 
+                        v-model="layers[layerName]" 
+                        @change="toggleLayer(layerName)"
+                        class="mr-2"
+                      >
+                      <span class="flex-1 truncate mr-2">{{ getLayerLabel(layerName) }}</span>
+                    </div>
+
+                    <!-- Info Icon -->
+                    <div>
+                      <svg 
+                        class="w-4 h-4 text-gray-500 hover:text-gray-700 cursor-help"
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                        @mouseenter="updateTooltipPosition($event, layerName)"
+                        @mouseleave="hoveredLayer = null"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <!-- Controls when layer is active -->
+                  <div v-if="layers[layerName]" class="pl-7">
+                    <!-- Opacity Slider -->
+                    <div class="flex items-center space-x-2 mb-2">
+                      <span class="text-xs text-gray-500 w-8">0%</span>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="100" 
+                        v-model="layerOpacities[layerName]" 
+                        @input="updateLayerOpacity(layerName)"
+                        class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      >
+                      <span class="text-xs text-gray-500 w-8">{{ layerOpacities[layerName] }}%</span>
+                    </div>
+
+                    <!-- Legend Display -->
+                    <div v-if="legends[layerName]">
+                      <div class="relative">
+                        <div :class="{'max-h-32 overflow-hidden': isLegendLarge(layerName) && !expandedLegends[layerName]}">
+                          <img 
+                            :src="legends[layerName]" 
+                            :alt="'Legend for ' + getLayerLabel(layerName)"
+                            class="max-w-full cursor-pointer"
+                            @click="openLegendModal(layerName)"
+                            @load="checkLegendSize($event, layerName)"
+                          />
+                        </div>
+                        <div class="flex space-x-2 mt-1" v-if="isLegendLarge(layerName)">
+                          <button 
+                            @click="toggleLegend(layerName)"
+                            class="text-sm text-blue-400 hover:text-blue-300"
+                          >
+                            {{ expandedLegends[layerName] ? 'Zeige weniger' : 'Zeige mehr' }}
+                          </button>
+                          <button 
+                            @click="openLegendModal(layerName)"
+                            class="text-sm text-blue-400 hover:text-blue-300"
+                          >
+                            Vergrößern
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </template>
+          </draggable>
         </div>
       </div>
 
       <!-- Protected Areas -->
-      <div class="border border-gray-700 rounded-lg overflow-hidden">
+      <div class="border overflow-hidden rounded-lg"
+      :class="{ 'bg-zinc-100': openSections.protectedAreas }"
+      >
         <button 
           @click="toggleSection('protectedAreas')"
-          class="w-full p-3 flex justify-between items-center bg-gray-800 hover:bg-gray-700"
+          class="w-full p-3 flex justify-between items-center hover:bg-zinc-200"
         >
           <span class="font-medium">Schutzgebiete</span>
           <svg 
@@ -85,50 +164,115 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-        <div v-show="openSections.protectedAreas" class="p-3 bg-gray-700 border-t border-gray-600 max-h-96 overflow-y-auto">
-          <div class="space-y-2">
-            <!-- Protected Area Layers -->
-            <div 
-              v-for="layerName in layerOrder.filter(name => ['trinkwasser', 'landschaftsschutz', 'naturschutz'].includes(name))"
-              :key="layerName"
-              class="space-y-1 p-2 cursor-move bg-gray-700 hover:bg-gray-600 rounded transition-colors"
-              :class="{
-                'opacity-50': dragTarget === layerName,
-                'border-t-2 border-blue-500': dragTarget === layerName
-              }"
-              draggable="true"
-              @dragstart="handleDragStart($event, layerName)"
-              @dragend="handleDragEnd"
-              @dragover="handleDragOver"
-              @dragenter="handleDragEnter($event, layerName)"
-              @dragleave="handleDragLeave"
-              @drop="handleDrop($event, layerName)"
-            >
-              <label class="flex items-center space-x-2">
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
-                </svg>
-                <input type="checkbox" v-model="layers[layerName]" @change="toggleLayer(layerName)">
-                <span>{{ getLayerLabel(layerName) }}</span>
-              </label>
-              <div v-if="layers[layerName] && legends[layerName]" class="pl-6 mt-1">
-                <img 
-                  :src="legends[layerName]" 
-                  :alt="'Legend for ' + getLayerLabel(layerName)"
-                  class="max-w-full"
-                />
+        <div v-show="openSections.protectedAreas" class="border-t border-gray-300 max-h-96 overflow-y-auto px-2 py-2">
+          <draggable 
+            v-model="layerOrder"
+            v-bind="dragOptions"
+            item-key="name"
+            class="space-y-2"
+            @change="handleLayerOrderChange"
+          >
+            <template #item="{ element: layerName }">
+              <div 
+                v-if="['trinkwasser', 'landschaftsschutz', 'naturschutz'].includes(layerName)"
+                class="space-y-1 p-2 bg-white hover:bg-gray-100 rounded transition-colors"
+              >
+                <div class="flex flex-col space-y-2">
+                  <!-- Main Layer Controls -->
+                  <div class="flex items-center">
+                    <!-- Drag Handle -->
+                    <div class="drag-handle cursor-grab p-1">
+                      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                      </svg>
+                    </div>
+                    
+                    <!-- Checkbox and Label -->
+                    <div class="flex-1 flex items-center min-w-0">
+                      <input 
+                        type="checkbox" 
+                        v-model="layers[layerName]" 
+                        @change="toggleLayer(layerName)"
+                        class="mr-2"
+                      >
+                      <span class="flex-1 truncate mr-2">{{ getLayerLabel(layerName) }}</span>
+                    </div>
+
+                    <!-- Info Icon -->
+                    <div>
+                      <svg 
+                        class="w-4 h-4 text-gray-500 hover:text-gray-700 cursor-help"
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                        @mouseenter="updateTooltipPosition($event, layerName)"
+                        @mouseleave="hoveredLayer = null"
+                      >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <!-- Controls when layer is active -->
+                  <div v-if="layers[layerName]" class="pl-7">
+                    <!-- Opacity Slider -->
+                    <div class="flex items-center space-x-2 mb-2">
+                      <span class="text-xs text-gray-500 w-8">0%</span>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="100" 
+                        v-model="layerOpacities[layerName]" 
+                        @input="updateLayerOpacity(layerName)"
+                        class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      >
+                      <span class="text-xs text-gray-500 w-8">{{ layerOpacities[layerName] }}%</span>
+                    </div>
+
+                    <!-- Legend Display -->
+                    <div v-if="legends[layerName]">
+                      <div class="relative">
+                        <div :class="{'max-h-32 overflow-hidden': isLegendLarge(layerName) && !expandedLegends[layerName]}">
+                          <img 
+                            :src="legends[layerName]" 
+                            :alt="'Legend for ' + getLayerLabel(layerName)"
+                            class="max-w-full cursor-pointer"
+                            @click="openLegendModal(layerName)"
+                            @load="checkLegendSize($event, layerName)"
+                          />
+                        </div>
+                        <div class="flex space-x-2 mt-1" v-if="isLegendLarge(layerName)">
+                          <button 
+                            @click="toggleLegend(layerName)"
+                            class="text-sm text-blue-400 hover:text-blue-300"
+                          >
+                            {{ expandedLegends[layerName] ? 'Zeige weniger' : 'Zeige mehr' }}
+                          </button>
+                          <button 
+                            @click="openLegendModal(layerName)"
+                            class="text-sm text-blue-400 hover:text-blue-300"
+                          >
+                            Vergrößern
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </template>
+          </draggable>
         </div>
       </div>
 
       <!-- Background -->
-      <div class="border border-gray-700 rounded-lg overflow-hidden">
+      <div class="border overflow-hidden rounded-lg"
+      :class="{ 'bg-zinc-100': openSections.background }"
+      >
         <button 
           @click="toggleSection('background')"
-          class="w-full p-3 flex justify-between items-center bg-gray-800 hover:bg-gray-700"
-        >
+          class="w-full p-3 flex justify-between items-center hover:bg-zinc-300"
+          >
           <span class="font-medium">Hintergrund</span>
           <svg 
             class="w-5 h-5 transform transition-transform"
@@ -140,7 +284,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-        <div v-show="openSections.background" class="p-3 bg-gray-700 border-t border-gray-600">
+        <div v-show="openSections.background" class="p-3 border-t border-gray-300 px-3 py-3">
           <div class="space-y-2">
             <label class="flex items-center space-x-2">
               <input type="radio" name="background" value="none" v-model="selectedBackground" @change="changeBackground">
@@ -160,395 +304,184 @@
             </label>
           </div>
         </div>
+        </div>
       </div>
     </div>
-  </div>
+
+  <!-- Teleported tooltip -->
+  <Teleport to="body">
+    <div 
+      v-if="hoveredLayer"
+      class="fixed bg-gray-900 text-white text-sm p-2 rounded shadow-lg w-48 z-[100]"
+      :style="tooltipStyle"
+    >
+      {{ getLayerInfo(hoveredLayer) }}
+    </div>
+  </Teleport>
 </template>
 
-  <script>
-import { ref, watch, onUnmounted } from 'vue'
-import TileLayer from 'ol/layer/Tile'
-import ImageLayer from 'ol/layer/Image'
-import ImageWMS from 'ol/source/ImageWMS'
-import OSM from 'ol/source/OSM'
-import TileWMS from 'ol/source/TileWMS'
-import { useMapLayers } from '../composables/useMapLayers'
-export default {
-  name: 'LayerAccordion',
-  props: {
-    map: {
-      type: Object,
-      required: true
-    }
-  },
-  emits: ['back'],
-  setup(props) {
+<script setup>
+import { ref, watch, onUnmounted, defineProps } from 'vue'
+import { useLayerManagement } from '../composables/useLayerManagement'
+import draggable from 'vuedraggable'
 
-    // In LayerAccordion setup
-    const { activeBackgroundType, setBackground } = useMapLayers()
-
-    const legends = ref({})
-    // Replace selectedBackground with activeBackgroundType
-    const selectedBackground = activeBackgroundType
-
-    // Replace changeBackground with
-    const changeBackground = () => {
-    setBackground(selectedBackground.value, props.map)
-    }
-
-    const dragTarget = ref(null)
-
-    const layerOrder = ref([
-        'soilNutrients',
-        'regierungsbezirk',
-        'landkreis',
-        'gemeinde',
-        'flurkartenSchnitt',
-        'kartiergebiete',
-        'trinkwasser',           // Added protected areas
-        'landschaftsschutz',     // Added protected areas
-        'naturschutz'           // Added protected areas
-      ])
-
-
-      const getLayerLabel = (layerName) => {
-        const labels = {
-          flurkartenSchnitt: 'Flurkartenschnitt 1:5.000',
-          regierungsbezirk: 'Regierungsbezirk',
-          landkreis: 'Landkreis',
-          gemeinde: 'Gemeinde',
-          kartiergebiete: 'Kartiergebiete des VFS',
-          soilNutrients: 'Boden Typ',
-          trinkwasser: 'Trinkwasserschutzgebiete',
-          landschaftsschutz: 'Landschaftsschutzgebiete',
-          naturschutz: 'Naturschutzgebiete'
-        }
-        return labels[layerName] || layerName
-      }
-
-    const handleDragEnter = (e, layerName) => {
-      e.preventDefault()
-      dragTarget.value = layerName
-    }
-
-    const handleDragLeave = (e) => {
-      e.preventDefault()
-      dragTarget.value = null
-    }
-
-    const updateLayerZIndices = () => {
-      layerOrder.value.forEach((layerName, index) => {
-        const layer = wmsLayers.get(layerName)
-        if (layer) {
-          // Add 1 to index to ensure no negative z-indices
-          // Multiply by 10 to leave room for fine-tuning if needed
-          layer.setZIndex((layerOrder.value.length - index) * 10)
-        }
-      })
-    }
-
-
-    const handleDragStart = (e, layerName) => {
-  e.dataTransfer.effectAllowed = 'move'
-  e.dataTransfer.setData('text/plain', layerName)
-  e.target.classList.add('opacity-50')
-}
-
-const handleDragEnd = (e) => {
-  e.target.classList.remove('opacity-50')
-}
-
-const handleDragOver = (e) => {
-  if (e.preventDefault) {
-    e.preventDefault()
+const props = defineProps({
+  map: {
+    type: Object,
+    required: true
   }
-  e.dataTransfer.dropEffect = 'move'
-  return false
+})
+
+const {
+  layers,
+  legends,
+  layerOrder,
+  selectedBackground,
+  getLayerLabel,
+  toggleLayer,
+  changeBackground,
+  updateLayerZIndices,
+  wmsLayers,
+  activeBackgroundLayer,
+  layerOpacities,
+  updateLayerOpacity
+} = useLayerManagement(props.map)
+
+// Draggable configuration
+const dragOptions = {
+  animation: 200,
+  handle: '.drag-handle',
+  ghostClass: 'opacity-50'
 }
 
-const handleDrop = (e, targetLayerName) => {
-  e.stopPropagation()
-  e.preventDefault()
-  
-  const sourceLayerName = e.dataTransfer.getData('text/plain')
-  
-  if (sourceLayerName === targetLayerName) {
-    return
-  }
-  
-  // Update order
-  const newOrder = [...layerOrder.value]
-  const sourceIndex = newOrder.indexOf(sourceLayerName)
-  const targetIndex = newOrder.indexOf(targetLayerName)
-  
-  newOrder.splice(sourceIndex, 1)
-  newOrder.splice(targetIndex, 0, sourceLayerName)
-  
-  layerOrder.value = newOrder
+// Section management
+const openSections = ref({
+  mapContents: true,
+  protectedAreas: false,
+  background: false
+})
+
+// Legend management
+const showLegendModal = ref(false)
+const selectedLegendUrl = ref('')
+const selectedLegendTitle = ref('')
+const expandedLegends = ref({})
+const legendSizes = ref({})
+
+// Tooltip management
+const hoveredLayer = ref(null)
+const tooltipStyle = ref({})
+
+// Layer information texts
+const layerInfo = {
+  kartiergebiete: "Detaillierte Informationen über die Kartiergebiete...",
+  trinkwasser: "Informationen über Trinkwasserschutzgebiete...",
+  landschaftsschutz: "Informationen über Landschaftsschutzgebiete...",
+  naturschutz: "Informationen über Naturschutzgebiete...",
+  // Add more layer info texts as needed
+}
+
+// Methods
+const toggleSection = (section) => {
+  openSections.value[section] = !openSections.value[section]
+}
+
+const handleLayerOrderChange = () => {
   updateLayerZIndices()
-  dragTarget.value = null  // Clear drag target
 }
 
+const isLegendLarge = (layerName) => {
+  return legendSizes.value[layerName]?.height > 200
+}
 
-    const getLegendUrl = (layerName) => {
-        const wmsConfig = {
-          default: {
-            url: 'https://geoserver-vfs.csgis.de/geoserver/wms',
-            version: '1.3.0'
-          },
-          soilNutrients: {
-            url: 'https://services.bgr.de/wms/boden/buek1000en/',
-            version: '1.3.0'
-          }
-        }
-
-        const config = wmsConfig[layerName] || wmsConfig.default
-        const layerSource = layerSources[layerName]
-
-        return `${config.url}?REQUEST=GetLegendGraphic&VERSION=${config.version}&FORMAT=image/png&LAYER=${layerSource}`
-      }
-
-      const loadLegend = async (layerName) => {
-        if (!layers.value[layerName]) {
-          legends.value[layerName] = null
-          return
-        }
-
-        const legendUrl = getLegendUrl(layerName)
-        legends.value[layerName] = legendUrl
-      }
-
-    const openSections = ref({
-      mapContents: true,
-      protectedAreas: false,
-      background: false
-    })
-
-    const layers = ref({
-      flurkartenSchnitt: false,
-      regierungsbezirk: false,
-      landkreis: false,
-      gemeinde: false,
-      kartiergebiete: true,
-      trinkwasser: false,
-      landschaftsschutz: false,
-      naturschutz: false,
-      soilNutrients: false
-    })
-
-    const wmsLayers = new Map()
-    const backgroundLayers = ref({})
-    const activeBackgroundLayer = ref(null)
-
-    const layerSources = {
-      flurkartenSchnitt: 'admin_boundaries:flurkarte',
-      regierungsbezirk: 'admin_boundaries:regierungsbezirke',
-      landkreis: 'admin_boundaries:landkreise',
-      gemeinde: 'admin_boundaries:gemeinden',
-      kartiergebiete: 'vfs:kartiergebiete',
-      trinkwasser: 'schutzgebiete:twsg',
-      landschaftsschutz: 'schutzgebiete:landschafts',
-      naturschutz: 'schutzgebiete:natur',
-      soilNutrients: '0'
-    }
-
-    const createBackgroundLayer = (type) => {
-      if (type === 'none') return null;
-
-      const sources = {
-        osm: () => new OSM({
-          crossOrigin: 'anonymous',
-          wrapX: false,
-        }),
-        webatlas: () => new TileWMS({
-          url: 'https://sgx.geodatenzentrum.de/wms_basemapde',
-          params: {
-            'LAYERS': 'de_basemapde_web_raster_farbe',
-            'FORMAT': 'image/png',
-            'VERSION': '1.3.0'
-          },
-          crossOrigin: 'anonymous',
-          wrapX: false
-        }),
-        luftbilder: () => new TileWMS({
-          url: 'https://geoservices.bayern.de/od/wms/dop/v1/dop20',
-          params: {
-            'LAYERS': 'by_dop20c',
-            'FORMAT': 'image/png',
-            'VERSION': '1.3.0'
-          },
-          crossOrigin: 'anonymous',
-          wrapX: false
-        })
-      }
-
-      if (!sources[type]) return null;
-
-      return new TileLayer({
-        source: sources[type](),
-        zIndex: 0,
-        visible: true
-      })
-    }
-
-    const initializeBackgroundLayers = () => {
-      if (selectedBackground.value !== 'none') {
-        const layer = createBackgroundLayer(selectedBackground.value)
-        if (layer) {
-          backgroundLayers.value[selectedBackground.value] = layer
-          activeBackgroundLayer.value = layer
-          props.map.addLayer(layer)
-        }
-      }
-    }
-
-    const toggleSection = (section) => {
-      openSections.value[section] = !openSections.value[section]
-    }
-
-    const createWMSLayer = (layerName) => {
-      const wmsConfig = {
-        default: {
-          url: 'https://geoserver-vfs.csgis.de/geoserver/wms',
-          version: '1.3.0'
-        },
-        soilNutrients: {
-          url: 'https://services.bgr.de/wms/boden/buek1000en/',
-          version: '1.3.0'
-        }
-      }
-
-      // Define zIndex for each layer type
-      const zIndexMap = {
-        soilNutrients: 1,           // BGR soil layer at bottom
-        regierungsbezirk: 2,        // Administrative boundaries in the middle
-        landkreis: 3,
-        gemeinde: 4,
-        flurkartenSchnitt: 5,
-        kartiergebiete: 10          // VFS Kartiergebiete always on top
-      }
-
-      const config = wmsConfig[layerName] || wmsConfig.default
-      const zIndex = zIndexMap[layerName] || 5 // Default zIndex if not specified
-
-      return new ImageLayer({
-        source: new ImageWMS({
-          url: config.url,
-          params: {
-            'LAYERS': layerSources[layerName],
-            'FORMAT': 'image/png',
-            'TRANSPARENT': true,
-            'VERSION': config.version
-          },
-          crossOrigin: 'anonymous',
-          ratio: 1,
-          wrapX: false
-        }),
-        zIndex: zIndex
-      })
-    }
-
-
-    const toggleLayer = (layerName) => {
-  if (!props.map) return
-
-  const isActive = layers.value[layerName]
-  let layer = wmsLayers.get(layerName)
-  
-  if (isActive) {
-    if (!layer) {
-      layer = createWMSLayer(layerName)
-      wmsLayers.set(layerName, layer)
-      props.map.addLayer(layer)
-    } else {
-      layer.setVisible(true)
-    }
-    // Load legend when layer is activated
-    loadLegend(layerName)
-  } else {
-    if (layer) {
-      layer.setVisible(false)
-    }
-    // Clear legend when layer is deactivated
-    legends.value[layerName] = null
+const checkLegendSize = (event, layerName) => {
+  legendSizes.value[layerName] = {
+    width: event.target.naturalWidth,
+    height: event.target.naturalHeight
   }
 }
 
+const toggleLegend = (layerName) => {
+  expandedLegends.value[layerName] = !expandedLegends.value[layerName]
+}
 
+const openLegendModal = (layerName) => {
+  selectedLegendUrl.value = legends.value[layerName]
+  selectedLegendTitle.value = getLayerLabel(layerName)
+  showLegendModal.value = true
+}
 
-    // Watch for map availability
-    watch(() => props.map, (newMap) => {
-      if (newMap) {
-        console.log('Map available, initializing layers')
-        initializeBackgroundLayers()
-        
-        // Initialize default layers
-        if (layers.value.kartiergebiete) {
-          toggleLayer('kartiergebiete')
-        }
-      }
-    }, { immediate: true })
+const closeLegendModal = () => {
+  showLegendModal.value = false
+  selectedLegendUrl.value = ''
+  selectedLegendTitle.value = ''
+}
 
-    // Watch for background changes
-    watch(() => selectedBackground.value, (newValue, oldValue) => {
-      if (newValue !== oldValue) {
-        changeBackground()
-      }
-    })
+const getLayerInfo = (layerName) => {
+  return layerInfo[layerName] || "Information about this layer will be added soon."
+}
 
-    // Watch for layer changes to update z-indices
-    watch(() => wmsLayers.size, () => {
-      updateLayerZIndices()
-    })
-
-    // Watch for layer changes
-    watch(layers, (newLayers) => {
-      Object.entries(newLayers).forEach(([layerName, isActive]) => {
-        const currentLayer = wmsLayers.get(layerName)
-        if (isActive && !currentLayer) {
-          toggleLayer(layerName)
-        } else if (!isActive && currentLayer) {
-          toggleLayer(layerName)
-        }
-      })
-    }, { deep: true })
-
-    // Cleanup on unmount
-    onUnmounted(() => {
-      console.log("Unmounted");
-
-      // In this case, we don't need to manually remove layers from the map as it's destroyed in App.vue
-      if (props.map) {
-        if (activeBackgroundLayer.value) {
-          props.map.removeLayer(activeBackgroundLayer.value);
-        }
-        wmsLayers.forEach(layer => {
-          props.map.removeLayer(layer);
-        });
-
-        // In case the map is not being destroyed by parent, make sure we clear it properly here.
-        props.map.setTarget(null); // Optional if we want to make sure it is detached
-      }
-    });
-
-    return {
-      openSections,
-      layers,
-      legends,
-      selectedBackground,
-      toggleSection,
-      toggleLayer,
-      changeBackground,
-      handleDragStart,
-      handleDragEnd,
-      handleDragOver,
-      handleDragEnter,
-      handleDragLeave,
-      handleDrop,
-      layerOrder,
-      dragTarget,
-      getLayerLabel
-    }
+const updateTooltipPosition = (event, layerName) => {
+  hoveredLayer.value = layerName
+  tooltipStyle.value = {
+    top: `${event.clientY - 10}px`,
+    left: `${event.clientX + 10}px`
   }
 }
-  </script>
+
+// Initialize layers when map is available
+watch(() => props.map, (newMap) => {
+  if (newMap && layers.value) {
+    if (selectedBackground.value !== 'none') {
+      changeBackground()
+    }
+  }
+}, { immediate: true })
+
+// Cleanup on unmount
+onUnmounted(() => {
+  if (props.map) {
+    if (activeBackgroundLayer.value) {
+      props.map.removeLayer(activeBackgroundLayer.value)
+    }
+    wmsLayers.forEach(layer => {
+      props.map.removeLayer(layer)
+    })
+    props.map.setTarget(null)
+  }
+})
+</script>
+
+<style>
+/* Custom styling for the range input */
+input[type="range"] {
+  -webkit-appearance: none;
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  background-image: linear-gradient(#3b82f6, #3b82f6);
+  background-repeat: no-repeat;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  box-shadow: 0 0 2px 0 #555;
+  transition: background .3s ease-in-out;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: #2563eb;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  -webkit-appearance: none;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+}
+</style>

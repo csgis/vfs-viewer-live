@@ -8,7 +8,7 @@
   
   <script setup>
   import { ref, watch, onUnmounted } from 'vue'
-  import { defineProps, defineEmits } from 'vue'
+  import { defineProps } from 'vue'
   import VectorSource from 'ol/source/Vector'
   import VectorLayer from 'ol/layer/Vector'
   import { Draw } from 'ol/interaction'
@@ -22,9 +22,7 @@
     },
     active: Boolean
   })
-  
-  defineEmits(['close'])
-  
+   
   const message = ref('Klicken Sie auf die Karte, um eine Linie zu zeichnen')
   const source = ref(null)
   const vector = ref(null)

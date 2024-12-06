@@ -2,7 +2,6 @@
     <div class="relative group">
       <button
         :class="buttonClass"
-        @click="$emit('click')"
       >
         <slot></slot>
       </button>
@@ -16,7 +15,7 @@
   </template>
   
   <script setup>
-  import { defineProps, defineEmits } from 'vue';
+  import { defineProps } from 'vue';
   
   defineProps({
     tooltip: {
@@ -28,6 +27,4 @@
       required: true
     }
   });
-  
-  defineEmits(['click']);
   </script>
