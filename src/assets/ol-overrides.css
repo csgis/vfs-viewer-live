@@ -8,7 +8,7 @@
   /* Style for both zoom buttons */
   .ol-zoom .ol-zoom-in,
   .ol-zoom .ol-zoom-out {
-    @apply w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-gray-50 transition-colors border border-gray-200;
+    @apply w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-gray-50 transition-colors border border-gray-200;
     margin: 0;
   }
   

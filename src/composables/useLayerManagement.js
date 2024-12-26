@@ -1,65 +1,25 @@
-// useLayerManagement.js
-import { nextTick, ref, watch } from 'vue'
-
 import ImageLayer from 'ol/layer/Image'
 import ImageWMS from 'ol/source/ImageWMS'
 import OSM from 'ol/source/OSM'
 import TileLayer from 'ol/layer/Tile'
 import TileWMS from 'ol/source/TileWMS'
 import XYZ from 'ol/source/XYZ'
+// useLayerManagement.js
+import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useLayerStore } from '../stores/layerStore'
 import { useUIStore } from '../stores/uiStore'
 
 export function useLayerManagement(map) {
-  const legends = ref({})
+  const layerStore = useLayerStore()
+  const uiStore = useUIStore()
+  
+  const { layers, legends, layerOrder, layerOpacities } = storeToRefs(layerStore)
+  
   const selectedBackground = ref('luftbilder')
   const wmsLayers = new Map()
   const backgroundLayers = ref({})
   const activeBackgroundLayer = ref(null)
-  const visibleLayers = ref([])
-  const layerOpacities = ref({})
-  const uiStore = useUIStore()
-
-  const layerOrder = ref([
-    'soilNutrients',
-    'regierungsbezirk',
-    'landkreis',
-    'gemeinde',
-    'flurkartenSchnitt',
-    'kartiergebiete',
-    'trinkwasser',
-    'landschaftsschutz',
-    'naturschutz',
-    'alkisParzellarkarte'
-  ])
-
-  const layers = ref({
-    flurkartenSchnitt: false,
-    regierungsbezirk: false,
-    landkreis: false,
-    gemeinde: false,
-    kartiergebiete: true,
-    trinkwasser: false,
-    landschaftsschutz: false,
-    naturschutz: false,
-    soilNutrients: false,
-    alkisParzellarkarte: false,
-  })
-
-  const getAttributionForBackground = (type) => {
-    const attributions = {
-      none: '',
-      osm: '© OpenStreetMap contributors',
-      webatlas: '© GeoBasis-DE/BKG',
-      luftbilder: '© Bayerische Vermessungsverwaltung',
-      terrain: '© tiles.stadiamaps.com'
-    }
-    return attributions[type] || ''
-  }
-
-  // Initialize layer opacities
-  Object.keys(layers.value).forEach(layerName => {
-    layerOpacities.value[layerName] = 100
-  })
 
   const layerSources = {
     flurkartenSchnitt: 'admin_boundaries:flurkarte',
@@ -71,7 +31,7 @@ export function useLayerManagement(map) {
     landschaftsschutz: 'schutzgebiete:landschafts',
     naturschutz: 'schutzgebiete:natur',
     soilNutrients: '0',
-    alkisParzellarkarte: 'by_alkis_parzellarkarte_umr_schwarz'
+    alkisParzellarkarte: 'by_alkis_parzellarkarte_farbe'
   }
 
   const getLayerLabel = (layerName) => {
@@ -89,6 +49,24 @@ export function useLayerManagement(map) {
     }
     return labels[layerName] || layerName
   }
+
+  const getAttributionForBackground = (type) => {
+    const attributions = {
+      none: '',
+      osm: '© OpenStreetMap contributors',
+      webatlas: '© GeoBasis-DE/BKG',
+      luftbilder: '© Bayerische Vermessungsverwaltung',
+      terrain: '© tiles.stadiamaps.com'
+    }
+    return attributions[type] || ''
+  }
+
+  // Initialize layer opacities
+  Object.keys(layers.value).forEach(layerName => {
+    if (layerOpacities.value[layerName] === undefined) {
+      layerStore.setLayerOpacity(layerName, 100);
+    }
+  });
 
   const createWMSLayer = (layerName) => {
     const wmsConfig = {
@@ -133,7 +111,7 @@ export function useLayerManagement(map) {
         wrapX: false
       }),
       zIndex: zIndex,
-      opacity: layerOpacities.value[layerName] / 100 // Set initial opacity
+      opacity: layerOpacities.value[layerName] / 100
     })
 
     return layer
@@ -184,15 +162,14 @@ export function useLayerManagement(map) {
   }
 
   const updateLayerOpacity = (layerName) => {
-    const opacity = layerOpacities.value[layerName] / 100
+    layerStore.setLayerOpacity(layerName, layerOpacities.value[layerName])
     const layer = wmsLayers.get(layerName)
     if (layer) {
-      layer.setOpacity(opacity)
+      layer.setOpacity(layerOpacities.value[layerName] / 100)
     }
   }
 
   const getLegendUrl = (layerName) => {
-    // Special case for ALKIS Parzellarkarte
     if (layerName === 'alkisParzellarkarte') {
       return 'https://geodaten.bayern.de/wms/legend/legende_alkis_parzellarkarte_umr.png'
     }
@@ -219,50 +196,68 @@ export function useLayerManagement(map) {
 
   const loadLegend = async (layerName) => {
     if (!layers.value[layerName]) {
-      legends.value[layerName] = null
+      layerStore.setLegendUrl(layerName, null)
       return
     }
-    legends.value[layerName] = getLegendUrl(layerName)
+    const url = getLegendUrl(layerName)
+    layerStore.setLegendUrl(layerName, url)
   }
 
   const toggleLayer = (layerName) => {
     if (!map) return
 
-    const isActive = layers.value[layerName]
-    let layer = wmsLayers.get(layerName)
+    // Get current state
+    const currentlyActive = layers.value[layerName];
+    // Toggle state in store
+    layerStore.setLayerVisibility(layerName, !currentlyActive);
     
-    if (isActive) {
+    let layer = wmsLayers.get(layerName);
+    
+    if (!currentlyActive) { // If it was inactive, now it will be active
       if (!layer) {
-        layer = createWMSLayer(layerName)
-        wmsLayers.set(layerName, layer)
-        map.addLayer(layer)
+        layer = createWMSLayer(layerName);
+        wmsLayers.set(layerName, layer);
+        map.addLayer(layer);
       } else {
-        layer.setVisible(true)
+        layer.setVisible(true);
       }
-      loadLegend(layerName)
-    } else {
+      loadLegend(layerName);
+    } else { // If it was active, now it will be inactive
       if (layer) {
-        layer.setVisible(false)
+        layer.setVisible(false);
       }
-      legends.value[layerName] = null
+      layerStore.setLegendUrl(layerName, null);
     }
-    updateVisibleLayers()
-  }
-
-  const updateVisibleLayers = () => {
-    visibleLayers.value = Object.keys(layers.value).filter((layer) => layers.value[layer])
-    nextTick(() => {
-      console.log('Visible Layers Content:', visibleLayers.value)
-    })
   }
 
   const updateLayerZIndices = () => {
-    layerOrder.value.forEach((layerName, index) => {
-      const layer = wmsLayers.get(layerName)
+    // Separate layers into protected and non-protected groups
+    const protectedLayers = layerOrder.value.filter(name => 
+      ['trinkwasser', 'landschaftsschutz', 'naturschutz'].includes(name)
+    );
+    
+    const nonProtectedLayers = layerOrder.value.filter(name => 
+      !['trinkwasser', 'landschaftsschutz', 'naturschutz'].includes(name)
+    );
+
+    // Update z-indices for non-protected layers (lower z-index range)
+    nonProtectedLayers.forEach((layerName, index) => {
+      const layer = wmsLayers.get(layerName);
       if (layer) {
-        layer.setZIndex((layerOrder.value.length - index) * 10)
+        layer.setZIndex((nonProtectedLayers.length - index) * 10);
       }
-    })
+    });
+
+    // Update z-indices for protected layers (higher z-index range)
+    protectedLayers.forEach((layerName, index) => {
+      const layer = wmsLayers.get(layerName);
+      if (layer) {
+        // Use a higher base z-index for protected layers
+        layer.setZIndex(1000 + (protectedLayers.length - index) * 10);
+      }
+    });
+
+    layerStore.updateLayerOrder(layerOrder.value);
   }
 
   const unloadAllBackgroundLayers = () => {
@@ -278,8 +273,6 @@ export function useLayerManagement(map) {
 
   const changeBackground = () => {
     unloadAllBackgroundLayers()
-
-    // Update attribution in the store
     uiStore.setMapAttribution(getAttributionForBackground(selectedBackground.value))
 
     if (selectedBackground.value !== 'none') {
@@ -291,7 +284,6 @@ export function useLayerManagement(map) {
       }
     }
   }
-
 
   // Initialize active layers when map is provided
   if (map) {
@@ -305,34 +297,6 @@ export function useLayerManagement(map) {
     })
   }
 
-  watch(() => wmsLayers.size, () => {
-    updateLayerZIndices()
-  })
-
-  watch(selectedBackground, () => {
-    changeBackground()
-  })
-
-  watch(
-    layers,
-    (newLayers) => {
-      console.log('Layers changed:', newLayers)
-      updateVisibleLayers()
-    },
-    { deep: true }
-  )
-
-  watch(layers, (newLayers) => {
-    Object.entries(newLayers).forEach(([layerName, isActive]) => {
-      const currentLayer = wmsLayers.get(layerName)
-      if (isActive && !currentLayer) {
-        toggleLayer(layerName)
-      } else if (!isActive && currentLayer) {
-        toggleLayer(layerName)
-      }
-    })
-  }, { deep: true })
-
   return {
     layers,
     legends,
@@ -345,8 +309,8 @@ export function useLayerManagement(map) {
     wmsLayers,
     activeBackgroundLayer,
     layerSources,
-    visibleLayers,
     layerOpacities,
-    updateLayerOpacity
+    updateLayerOpacity,
+    getLegendUrl
   }
 }

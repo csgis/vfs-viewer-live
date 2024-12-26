@@ -60,17 +60,17 @@
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Zurück
+          Hauptmenü
         </button>
       </div>
     </div>
   
     <!-- Control Buttons Panel -->
-    <div v-show="map" class="fixed right-6 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-50">
+    <div v-show="map" class="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-50">
       <!-- Home button -->
       <TooltipButton
         tooltip="Startansicht"
-        buttonClass="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-rose-300 transition-colors border border-gray-300"
+        buttonClass="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-blue-300 transition-colors border border-gray-300"
         @click="zoomHomeRef.zoomToHome()"
       >
         <img src="../assets/home.svg" class="h-6 w-6" alt="Home">
@@ -78,10 +78,10 @@
 
       <TooltipButton
           tooltip="Stadt suchen"
-          :buttonClass="`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
+          :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
             uiStore.activeControl !== 'city-search' 
-              ? 'bg-white hover:bg-rose-300 border-gray-300' 
-              : 'bg-rose-300 hover:bg-rose-400 bg-rose-300 text-white'
+              ? 'bg-white hover:bg-blue-300 border-gray-300' 
+              : 'bg-blue-300 hover:bg-blue-400 bg-blue-300 text-white'
           }`"
           @click="toggleControl('city-search')"
         >
@@ -91,7 +91,7 @@
       <!-- Help Button -->
       <TooltipButton
         tooltip="Hilfe öffnen"
-        buttonClass="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-rose-300 transition-colors border border-gray-300"
+        buttonClass="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-blue-300 transition-colors border border-gray-300"
         @click="helpRef.openHelp()"
       >
         <img src="../assets/help.svg" class="h-6 w-6" alt="Help">
@@ -100,9 +100,9 @@
       <!-- Navigate Back Button -->
       <TooltipButton
         tooltip="Zurück zur vorherigen Ansicht"
-        :buttonClass="`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
+        :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           navigateBackRef?.hasHistory
-            ? 'bg-rose-300 hover:bg-rose-400 border-gray-300' 
+            ? 'bg-blue-300 hover:bg-blue-400 border-gray-300' 
             : 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed'
         }`"
         :disabled="!navigateBackRef?.hasHistory"
@@ -119,10 +119,10 @@
       <!-- Zoom to Extent Button -->
       <TooltipButton
         tooltip="Bereich auswählen"
-        :buttonClass="`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
+        :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
             uiStore.activeControl !== 'zoom-extent' 
-            ? 'bg-white hover:bg-rose-300 border-gray-300' 
-            : 'bg-rose-300 hover:bg-rose-400 bg-rose-400 text-white'
+            ? 'bg-white hover:bg-blue-300 border-gray-300' 
+            : 'bg-blue-300 hover:bg-blue-400 bg-blue-400 text-white'
         }`"
         @click="toggleControl('zoom-extent')"
       >
@@ -132,10 +132,10 @@
       <!-- Measure Line Button -->
       <TooltipButton
         tooltip="Strecke messen"
-        :buttonClass="`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
+        :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.activeControl !== 'measure-line' 
-            ? 'bg-white hover:bg-rose-300 border-gray-3000' 
-            : 'bg-rose-300 hover:bg-rose-400 border-rose-400 text-white'
+            ? 'bg-white hover:bg-blue-300 border-gray-3000' 
+            : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
         }`"
         @click="toggleControl('measure-line')"
       >
@@ -145,23 +145,36 @@
       <!-- Measure Area Button -->
       <TooltipButton
         tooltip="Fläche messen"
-        :buttonClass="`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
+        :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.activeControl !== 'measure-area' 
-            ? 'bg-white hover:bg-rose-300 border-gray-300' 
-            : 'bg-rose-300 hover:bg-rose-400 border-rose-400 text-white'
+            ? 'bg-white hover:bg-blue-300 border-gray-300' 
+            : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
         }`"
         @click="toggleControl('measure-area')"
       >
         <img src="../assets/area.svg" class="h-6 w-6" alt="Measure Area">
       </TooltipButton>
 
+      <!-- Measure Radius Button -->
+      <TooltipButton
+        tooltip="Radius messen"
+        :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
+          uiStore.activeControl !== 'measure-radius' 
+            ? 'bg-white hover:bg-blue-300 border-gray-300' 
+            : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
+        }`"
+        @click="toggleControl('measure-radius')"
+      >
+        <img src="../assets/radius.svg" class="h-6 w-6" alt="Measure Radius">
+      </TooltipButton>
+
       <!-- Info Button -->
       <TooltipButton
         tooltip="Karteninhalte abfragen"
-        :buttonClass="`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
+        :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.activeControl !== 'info' 
-            ? 'bg-white hover:bg-rose-300 border-gray-300' 
-            : 'bg-rose-300 hover:bg-rose-400 border-rose-400 text-white'
+            ? 'bg-white hover:bg-blue-300 border-gray-300' 
+            : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
         }`"
         @click="uiStore.toggleControl('info')"
       >
@@ -171,10 +184,10 @@
       <!-- Print Button -->
       <TooltipButton
         tooltip="Karte drucken"
-        :buttonClass="`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
+        :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.activeControl !== 'print' 
-            ? 'bg-white hover:bg-rose-300 border-gray-300' 
-            : 'bg-rose-300 hover:bg-rose-400 border-rose-400 text-white'
+            ? 'bg-white hover:bg-blue-300 border-gray-300' 
+            : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
         }`"
         @click="toggleControl('print')"
       >
@@ -183,6 +196,8 @@
 
     </div>
   
+      <!-- Scale Info -->
+      <ScaleInfo :map="map" v-if="map" />
 
       <!-- Map Attribution -->
       <MapAttribution />
@@ -230,12 +245,17 @@
       :active="true"
       @close="toggleControl(null)"
     />
+    <MeasureRadius
+    v-if="uiStore.activeControl === 'measure-radius' && map"
+    :map="map"
+    :active="true"
+    @close="toggleControl(null)"
+  />
   </div>
 </template>
 
 <script>
 import { ref, onMounted, onUnmounted, onActivated, onDeactivated, watch, nextTick } from 'vue';
-import { useRouter } from 'vue-router';
 import { Map, View } from 'ol';
 import { fromLonLat } from 'ol/proj';
 import { defaults as defaultControls } from 'ol/control';
@@ -254,6 +274,8 @@ import { useRoute } from 'vue-router';
 import CitySearch from './CitySearch.vue';
 import { useUIStore } from '../stores/uiStore'
 import MapAttribution from './MapAttribution.vue'
+import ScaleInfo from './ScaleInfo.vue'
+import MeasureRadius from './MeasureRadius.vue';
 
 export default {
   name: 'MapViewer',
@@ -269,12 +291,13 @@ export default {
     PrintTool,
     TooltipButton,
     CitySearch,
-    MapAttribution
+    MapAttribution,
+    ScaleInfo,
+    MeasureRadius
   },
 
   setup() {
     const uiStore = useUIStore()
-    const router = useRouter();
     const mapElement = ref(null);
     const map = ref(null);
     const zoomHomeRef = ref(null);
@@ -283,6 +306,7 @@ export default {
     const zoomToExtentRef = ref(null);
     const route = useRoute();
     const { initializeBackground, cleanup } = useMapLayers();
+
 
     const handleResize = () => {
       if (map.value) {
@@ -317,9 +341,7 @@ export default {
   });
 
   // Update position on component mount
-  onMounted(() => {
-    setTimeout(updateZoomControlPosition, 100);
-  });
+
 
 
   watch(() => map.value, async (newMap) => {
@@ -400,13 +422,14 @@ export default {
     };
 
     const navigateBack = () => {
-      cleanupMap();
-      router.push('/');
-    };
+      uiStore.setShowMainSidebar()
+    }
 
     onMounted(() => {
       console.log('Component mounted');
       console.log('MapViewer mounted - navigateBackRef:', navigateBackRef.value)
+      setTimeout(updateZoomControlPosition, 100);
+      uiStore.hideMainSidebar()
       initializeMap();
     });
 

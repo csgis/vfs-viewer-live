@@ -55,8 +55,11 @@
             <template #item="{ element: layerName }">
               <div 
                 v-if="!['trinkwasser', 'landschaftsschutz', 'naturschutz'].includes(layerName)"
-                class="space-y-1 p-2 bg-white hover:bg-gray-100 rounded transition-colors"
+                class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors"
+                :class="layers[layerName] == true ? 'bg-blue-100 hover:bg-blue-100' : 'bg-white'"
               >
+
+
                 <div class="flex flex-col space-y-2">
                   <!-- Main Layer Controls -->
                   <div class="flex items-center">
@@ -71,7 +74,7 @@
                     <div class="flex-1 flex items-center min-w-0">
                       <input 
                         type="checkbox" 
-                        v-model="layers[layerName]" 
+                        :checked="layers[layerName]"
                         @change="toggleLayer(layerName)"
                         class="mr-2"
                       >
@@ -191,7 +194,7 @@
                     <div class="flex-1 flex items-center min-w-0">
                       <input 
                         type="checkbox" 
-                        v-model="layers[layerName]" 
+                        :checked="layers[layerName]"
                         @change="toggleLayer(layerName)"
                         class="mr-2"
                       >

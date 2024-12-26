@@ -26,24 +26,22 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'FachschalenComponent',
-  data() {
-    return {
-      items: [
-        { id: 1, name: 'Fachschale 1', type: 'Type A', status: 'Active' },
-        { id: 2, name: 'Fachschale 2', type: 'Type B', status: 'Inactive' },
-        { id: 3, name: 'Fachschale 3', type: 'Type A', status: 'Active' },
-      ]
-    }
-  },
-  methods: {
-    getStatusClass(status) {
-      return status === 'Active' 
-        ? 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800'
-        : 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800'
-    }
-  }
+<script setup>
+import { ref } from 'vue'
+import { useUIStore } from '../stores/uiStore'
+
+const uiStore = useUIStore()
+uiStore.setShowMainSidebar();
+
+const items = ref([
+  { id: 1, name: 'Fachschale 1', type: 'Type A', status: 'Active' },
+  { id: 2, name: 'Fachschale 2', type: 'Type B', status: 'Inactive' },
+  { id: 3, name: 'Fachschale 3', type: 'Type A', status: 'Active' },
+])
+
+const getStatusClass = (status) => {
+  return status === 'Active' 
+    ? 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800'
+    : 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800'
 }
 </script>

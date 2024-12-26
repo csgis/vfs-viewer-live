@@ -6,7 +6,8 @@ export const useUIStore = defineStore('ui', {
     isInfoPanelVisible: false,
     isSidebarExpanded: true,
     activeControl: null,
-    mapAttribution: 'OpenStreetMap contributors'
+    mapAttribution: 'OpenStreetMap contributors',
+    shouldShowMainSidebar: false
   }),
   
   actions: {
@@ -31,11 +32,20 @@ export const useUIStore = defineStore('ui', {
 
     setMapAttribution(attribution) {
         this.mapAttribution = attribution
-      }
+      },
+
+    setShowMainSidebar() {
+        this.shouldShowMainSidebar = true
+    },
+
+    hideMainSidebar() {
+        this.shouldShowMainSidebar = false
+    }
 
   },
   
   getters: {
-    isHandleVisible: (state) => !state.isInfoPanelVisible
+    isHandleVisible: (state) => !state.isInfoPanelVisible,
+    getMainSidebarVisibility: (state) => state.shouldShowMainSidebar
   }
 })

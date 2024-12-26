@@ -78,6 +78,7 @@ export function useMapLayers() {
               'VERSION': '1.3.0',
               'TILED': true
             },
+            crossOrigin: 'anonymous',
             wrapX: false
           }),
           zIndex: 0,

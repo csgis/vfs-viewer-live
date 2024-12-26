@@ -7,7 +7,7 @@
       </button>
       <!-- Tooltip -->
       <div class="absolute right-full mr-2 top-1/2 -translate-y-1/2 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity">
-        <div class="bg-gray-900 text-white text-sm px-2 py-1 rounded whitespace-nowrap">
+        <div class="bg-white text-black text-sm px-2 py-1 rounded whitespace-nowrap">
           {{ tooltip }}
         </div>
       </div>

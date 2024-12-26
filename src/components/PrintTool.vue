@@ -1,3 +1,4 @@
+//PrintTool.vue
 <template>
     <div v-if="active">
       <div class="fixed top-4 left-1/2 -translate-x-1/2 bg-white p-4 rounded-lg shadow-lg z-50">
@@ -9,7 +10,7 @@
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold">Druckeinstellungen</h3>
             <button 
-              @click="showSettings = false"
+              @click="handleClose"
               class="text-gray-500 hover:text-gray-700"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,6 +40,17 @@
                 <option value="a3">A3</option>
               </select>
             </div>
+
+            <div>
+              <label class="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  v-model="includeLegends"
+                  class="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                >
+                <span class="text-sm text-gray-700">Legende auf zweiter Seite</span>
+              </label>
+            </div>
   
             <div class="pt-4">
               <button
@@ -52,125 +64,224 @@
         </div>
       </div>
     </div>
-  </template>
-  
-  <script setup>
-  import { ref, defineProps } from 'vue';
-  import html2pdf from 'html2pdf.js'; // Import html2pdf
-  
-  const props = defineProps({
-    map: {
-      type: Object,
-      required: true
-    },
-    active: Boolean
-  });
-  
-  const showSettings = ref(true);
-  const message = ref('Konfigurieren Sie die Druckeinstellungen');
-  const title = ref('Kartenausschnitt');
-  const format = ref('a4');
-  
-  const generateAndDownloadPDF = async (resolution = 72) => {
-  const map = props.map;
-  const dims = {
-    a0: [1189, 841],
-    a1: [841, 594],
-    a2: [594, 420],
-    a3: [420, 297],
-    a4: [297, 210],
-    a5: [210, 148],
-  };
+</template>
 
-  const dim = dims[format.value];
-  const width = Math.round((dim[0] * resolution) / 25.4);
-  const height = Math.round((dim[1] * resolution) / 25.4);
-  const size = map.getSize();
-  const viewResolution = map.getView().getResolution();
+<script setup>
+import { ref } from 'vue';
+import jsPDF from 'jspdf';
+import { useLayerManagement } from '../composables/useLayerManagement';
+import { useLayerStore } from '../stores/layerStore';
+import { useUIStore } from '../stores/uiStore';
+import { storeToRefs } from 'pinia';
 
+const props = defineProps({
+  map: {
+    type: Object,
+    required: true
+  },
+  active: Boolean
+});
+
+const showSettings = ref(true);
+const message = ref('Konfigurieren Sie die Druckeinstellungen');
+const title = ref('Kartenausschnitt');
+const format = ref('a4');
+const includeLegends = ref(true);
+
+const { getLayerLabel, getLegendUrl } = useLayerManagement(props.map);
+const layerStore = useLayerStore();
+const uiStore = useUIStore();
+const { layers } = storeToRefs(layerStore);
+
+const handleClose = () => {
+  showSettings.value = false;
+  uiStore.clearActiveControl();
+};
+
+const generateAndDownloadPDF = async () => {
   document.body.style.cursor = 'progress';
   message.value = 'Erstelle PDF...';
 
   try {
-    // Trigger map rendering
-    map.setSize([width, height]);
-    map.getView().setResolution(viewResolution * size[0] / width);
+    const mapCanvas = document.querySelector('.ol-layer canvas');
+    if (!mapCanvas) {
+      throw new Error('Map canvas not found');
+    }
 
-    console.log("Waiting for rendercomplete...");
+    // Create PDF
+    const pdf = new jsPDF('landscape', 'mm', format.value);
     
-    // Wait for rendercomplete with a timeout
-    const renderComplete = new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('Render timeout')), 15000); // Timeout after 15 seconds
-      map.once('rendercomplete', () => {
-        clearTimeout(timeout);
-        console.log('Render completed');
-        resolve();
-      });
+    const imgData = mapCanvas.toDataURL('image/png', 1.0);
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    // Margins and spacing (in mm)
+    const sideMargin = 10;
+    const bottomMargin = 30; // 3cm bottom margin
+    const topMargin = 10;
+    const borderWidth = 0.5;
+
+    // Calculate available space for map
+    const availableWidth = pdfWidth - (2 * sideMargin);
+    const availableHeight = pdfHeight - topMargin - bottomMargin;
+    
+    // Calculate scale to fit map within margins
+    const scale = Math.min(
+      availableWidth / imgProps.width,
+      availableHeight / imgProps.height
+    );
+
+    // Calculate centered position for map
+    const mapWidth = imgProps.width * scale;
+    const mapHeight = imgProps.height * scale;
+    const mapX = sideMargin + (availableWidth - mapWidth) / 2;
+    const mapY = topMargin + (availableHeight - mapHeight) / 2;
+
+    // Draw black border rectangle
+    pdf.setLineWidth(borderWidth);
+    pdf.setDrawColor(0);
+    pdf.rect(mapX - 1, mapY - 1, mapWidth + 2, mapHeight + 2);
+
+    // Add map image
+    pdf.addImage(
+      imgData,
+      'PNG',
+      mapX,
+      mapY,
+      mapWidth,
+      mapHeight
+    );
+
+    // Add title in bottom margin
+    pdf.setFontSize(12);
+    pdf.setTextColor(0);
+    const titleY = pdfHeight - (bottomMargin / 2);
+    pdf.text(title.value || 'Kartenausschnitt', sideMargin, titleY);
+
+    // Calculate map scale
+    const mapResolution = props.map.getView().getResolution();
+    const mapScale = Math.round(mapResolution * 39.37 * 72);
+    const scaleText = `1:${mapScale.toLocaleString('de-DE')}`;
+
+    // Format current date
+    const currentDate = new Date().toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
     });
 
-    await renderComplete;
+    // Add scale and date to bottom right
+    const infoText = `${scaleText} | ${currentDate}`;
+    const infoWidth = pdf.getStringUnitWidth(infoText) * pdf.internal.getFontSize() / pdf.internal.scaleFactor;
+    pdf.text(infoText, pdfWidth - sideMargin - infoWidth, titleY);
 
-    // Create canvas and copy map layers
-    const mapCanvas = document.createElement('canvas');
-    mapCanvas.width = width;
-    mapCanvas.height = height;
-    const mapContext = mapCanvas.getContext('2d');
+    // Add legends page if enabled
+    if (includeLegends.value) {
+      console.log('Current layers state:', layers.value);
+      
+      const visibleLayers = Object.entries(layers.value)
+        .filter(([, isVisible]) => isVisible === true)
+        .map(([name]) => {
+          console.log(`Processing layer ${name}`);
+          const url = getLegendUrl(name);
+          return {
+            name,
+            url,
+            label: getLayerLabel(name)
+          };
+        });
 
-    const layerCanvas = document.querySelectorAll('.ol-layer canvas');
-    console.log('Number of layer canvases found:', layerCanvas.length);  // Debugging layer count
+      console.log('Visible layers:', visibleLayers);
 
-    Array.prototype.forEach.call(layerCanvas, (canvas) => {
-      if (canvas.width > 0) {
-        const opacity = canvas.parentNode.style.opacity || 1;
-        mapContext.globalAlpha = Number(opacity);
+      if (visibleLayers.length > 0) {
+        pdf.addPage();
+        
+        // Add "Legende" title
+        pdf.setFontSize(16);
+        pdf.text('Legende', sideMargin, 20);
+        
+        let currentY = 30;
+        const maxHeight = pdfHeight - 20;
 
-        const transform = canvas.style.transform;
-        const matrix = transform
-          .match(/^matrix\(([^()]*)\)$/)[1]
-          .split(',')
-          .map(Number);
+        for (const layer of visibleLayers) {
+          try {
+            console.log(`Processing legend for ${layer.name}`);
+            
+            // Add layer name
+            pdf.setFontSize(12);
+            pdf.text(layer.label, sideMargin, currentY);
+            currentY += 8;
 
-        CanvasRenderingContext2D.prototype.setTransform.apply(mapContext, matrix);
-        mapContext.drawImage(canvas, 0, 0);
+            // Create temporary image element to get dimensions
+            const img = new Image();
+            await new Promise((resolve, reject) => {
+              img.onload = () => {
+                console.log(`Legend image loaded for ${layer.name}, dimensions:`, img.width, 'x', img.height);
+                resolve();
+              };
+              img.onerror = (error) => {
+                console.error(`Failed to load legend for ${layer.name}:`, error);
+                reject(error);
+              };
+              img.crossOrigin = 'anonymous';
+              img.src = layer.url;
+            });
+
+            // Convert image dimensions from px to mm (assuming 96 DPI)
+            const pxToMm = 25.4 / 96;
+            const originalWidthMm = img.width * pxToMm;
+            const originalHeightMm = img.height * pxToMm;
+
+            // Maximum width allowed (accounting for margins)
+            const maxWidthMm = pdfWidth - (2 * sideMargin);
+
+            // Calculate final dimensions
+            let finalWidth = originalWidthMm;
+            let finalHeight = originalHeightMm;
+
+            // Only scale down if width exceeds maximum
+            if (originalWidthMm > maxWidthMm) {
+              const scale = maxWidthMm / originalWidthMm;
+              finalWidth = maxWidthMm;
+              finalHeight = originalHeightMm * scale;
+            }
+
+            // Check if we need to start a new page
+            if (currentY + finalHeight > maxHeight) {
+              pdf.addPage();
+              currentY = 20;
+            }
+
+            // Add legend image
+            pdf.addImage(
+              img,
+              'PNG',
+              sideMargin,
+              currentY,
+              finalWidth,
+              finalHeight
+            );
+
+            currentY += finalHeight + 15; // Add spacing after legend
+          } catch (error) {
+            console.error(`Error processing legend for ${layer.name}:`, error);
+          }
+        }
       }
-    });
+    }
 
-    // Prepare pdf options
-    const opt = {
-      filename: `${title.value || 'map'}.pdf`,
-      image: { type: 'image/png', quality: 1 },
-      html2canvas: { scale: 4 },
-      jsPDF: { unit: 'mm', format: format.value, orientation: 'landscape' }
-    };
-
-    // Generate and download PDF
-    html2pdf()
-      .from(mapCanvas)
-      .set(opt)
-      .save()
-      .then(() => {
-        document.body.style.cursor = 'auto'; // Stop the spinner
-        message.value = 'PDF wurde erstellt';
-      })
-      .catch((error) => {
-        console.error('Error generating PDF:', error);
-        document.body.style.cursor = 'auto'; // Stop the spinner
-        message.value = 'Fehler beim Erstellen der PDF';
-      });
+    pdf.save(`${title.value || 'map'}.pdf`);
+    message.value = 'PDF wurde erstellt';
 
   } catch (error) {
     console.error('Error generating PDF:', error);
-    document.body.style.cursor = 'auto'; // Stop the spinner
     message.value = 'Fehler beim Erstellen der PDF';
   } finally {
-    // Restore map state
-    map.setSize(size);
-    map.getView().setResolution(viewResolution);
     document.body.style.cursor = 'auto';
-    message.value = 'Konfigurieren Sie die Druckeinstellungen';
+    setTimeout(() => {
+      message.value = 'Konfigurieren Sie die Druckeinstellungen';
+    }, 2000);
   }
 };
-
-  </script>
-  
-  
+</script>

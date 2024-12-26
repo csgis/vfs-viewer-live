@@ -209,7 +209,7 @@ const formatValue = (value) => {
   const urlPattern = /^(https?:\/\/[^\s]+)$/;
   
   if (typeof value === 'string' && urlPattern.test(value)) {
-    return `<a href="${value}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:text-blue-700 underline">${value}</a>`;
+    return `<a href="${value}" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:text-blue-900 underline">${value.replace(/\/$/, '')}</a>`;
   }
 
   return value;
