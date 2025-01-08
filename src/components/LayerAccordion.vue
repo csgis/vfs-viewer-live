@@ -77,8 +77,17 @@
                         :checked="layers[layerName]"
                         @change="toggleLayer(layerName)"
                         class="mr-2"
+                        :disabled="!isLayerAvailable(layerName)"
                       >
-                      <span class="flex-1 truncate mr-2">{{ getLayerLabel(layerName) }}</span>
+                      <span 
+                        class="flex-1 truncate mr-2" 
+                        :class="{ 'text-gray-400': !isLayerAvailable(layerName) }"
+                      >
+                        {{ getLayerLabel(layerName) }}
+                        <span v-if="!isLayerAvailable(layerName)" class="text-xs text-gray-400 ml-1">
+                          (Login erforderlich)
+                        </span>
+                      </span>
                     </div>
 
                     <!-- Info Icon -->
@@ -269,13 +278,15 @@
       </div>
 
       <!-- Background -->
+
+      <!-- Background section of LayerAccordion.vue -->
       <div class="border overflow-hidden rounded-lg"
       :class="{ 'bg-zinc-100': openSections.background }"
       >
         <button 
           @click="toggleSection('background')"
           class="w-full p-3 flex justify-between items-center hover:bg-zinc-300"
-          >
+        >
           <span class="font-medium">Hintergrund</span>
           <svg 
             class="w-5 h-5 transform transition-transform"
@@ -289,29 +300,41 @@
         </button>
         <div v-show="openSections.background" class="p-3 border-t border-gray-300 px-3 py-3">
           <div class="space-y-2">
+            <!-- Existing background options -->
             <label class="flex items-center space-x-2">
               <input type="radio" name="background" value="none" v-model="selectedBackground" @change="changeBackground">
               <span>Kein Hintergrund</span>
             </label>
             <label class="flex items-center space-x-2">
-              <input type="radio" name="background" value="osm" v-model="selectedBackground" @change="changeBackground">
-              <span>OSM</span>
-            </label>
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="background" value="webatlas" v-model="selectedBackground" @change="changeBackground">
-              <span>WebAtlasDe.light</span>
-            </label>
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="background" value="terrain" v-model="selectedBackground" @change="changeBackground">
-              <span>Terrain</span>
-            </label>
-            <label class="flex items-center space-x-2">
               <input type="radio" name="background" value="luftbilder" v-model="selectedBackground" @change="changeBackground">
               <span>Luftbilder WMS DOP 20</span>
             </label>
+            <label class="flex items-center space-x-2">
+              <input type="radio" name="background" value="osm" v-model="selectedBackground" @change="changeBackground">
+              <span>Open Street Map</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="radio" name="background" value="terrain" v-model="selectedBackground" @change="changeBackground">
+              <span>Stadiamaps Terrain</span>
+            </label>
+            
+            <!-- Vector tile options -->
+            <label class="flex items-center space-x-2">
+              <input type="radio" name="background" value="vectorColor" v-model="selectedBackground" @change="changeBackground">
+              <span>Basemap.de Vektor (Farbe)</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="radio" name="background" value="vectorRelief" v-model="selectedBackground" @change="changeBackground">
+              <span>Basemap.de Vektor (Relief)</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="radio" name="background" value="vectorGrey" v-model="selectedBackground" @change="changeBackground">
+              <span>Basemap.de Vektor (Grau)</span>
+            </label>
           </div>
         </div>
-        </div>
+      </div>
+
       </div>
     </div>
 
@@ -351,7 +374,8 @@ const {
   wmsLayers,
   activeBackgroundLayer,
   layerOpacities,
-  updateLayerOpacity
+  updateLayerOpacity,
+  isLayerAvailable
 } = useLayerManagement(props.map)
 
 // Draggable configuration

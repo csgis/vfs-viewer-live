@@ -4,16 +4,19 @@ import OSM from 'ol/source/OSM'
 import TileLayer from 'ol/layer/Tile'
 import TileWMS from 'ol/source/TileWMS'
 import XYZ from 'ol/source/XYZ'
+import { apply as applyMapboxStyle } from 'ol-mapbox-style'
 // useLayerManagement.js
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useAuthStore } from '../stores/authStore'
 import { useLayerStore } from '../stores/layerStore'
 import { useUIStore } from '../stores/uiStore'
 
 export function useLayerManagement(map) {
   const layerStore = useLayerStore()
   const uiStore = useUIStore()
-  
+  const authStore = useAuthStore()
+
   const { layers, legends, layerOrder, layerOpacities } = storeToRefs(layerStore)
   
   const selectedBackground = ref('luftbilder')
@@ -54,7 +57,6 @@ export function useLayerManagement(map) {
     const attributions = {
       none: '',
       osm: '© OpenStreetMap contributors',
-      webatlas: '© GeoBasis-DE/BKG',
       luftbilder: '© Bayerische Vermessungsverwaltung',
       terrain: '© tiles.stadiamaps.com'
     }
@@ -117,49 +119,66 @@ export function useLayerManagement(map) {
     return layer
   }
 
-  const createBackgroundLayer = (type) => {
-    if (type === 'none') return null
+    const vectorStyles = {
+      vectorColor: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_col.json',
+      vectorRelief: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_top.json',
+      vectorGrey: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json'
+    }
+
+
+    const createBackgroundLayer = async (type) => {
+      if (type === 'none') return null;
   
-    const sources = {
-      osm: () => new OSM({
-        crossOrigin: 'anonymous',
-        wrapX: false,
-      }),
-      webatlas: () => new TileWMS({
-        url: 'https://sgx.geodatenzentrum.de/wms_basemapde',
-        params: {
-          'LAYERS': 'de_basemapde_web_raster_farbe',
-          'FORMAT': 'image/png',
-          'VERSION': '1.3.0'
-        },
-        crossOrigin: 'anonymous',
-        wrapX: false
-      }),
-      terrain: () => new XYZ({
-        url: 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}.png',
-        crossOrigin: 'anonymous',
-        maxZoom: 18
-      }),
-      luftbilder: () => new TileWMS({
-        url: 'https://geoservices.bayern.de/od/wms/dop/v1/dop20',
-        params: {
-          'LAYERS': 'by_dop20c',
-          'FORMAT': 'image/png',
-          'VERSION': '1.3.0'
-        },
-        crossOrigin: 'anonymous',
-        wrapX: false
-      })
+      // Handle vector tile backgrounds
+      if (vectorStyles[type]) {
+        try {
+          // Create a dummy layer group to hold vector tiles
+          const dummyLayer = new TileLayer({
+            source: new OSM(),
+            visible: false
+          });
+          
+          // Apply vector style
+          await applyMapboxStyle(map, vectorStyles[type]);
+          return dummyLayer;
+        } catch (error) {
+          console.error('Error creating vector tile layer:', error);
+          return null;
+        }
+      }
+  
+      // Handle regular tile layers
+      const sources = {
+        osm: () => new OSM({
+          crossOrigin: 'anonymous',
+          wrapX: false,
+        }),
+        terrain: () => new XYZ({
+          url: 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}.png',
+          crossOrigin: 'anonymous',
+          maxZoom: 18
+        }),
+        luftbilder: () => new TileWMS({
+          url: 'https://geoservices.bayern.de/od/wms/dop/v1/dop20',
+          params: {
+            'LAYERS': 'by_dop20c',
+            'FORMAT': 'image/png',
+            'VERSION': '1.3.0'
+          },
+          crossOrigin: 'anonymous',
+          wrapX: false
+        })
+      }
+  
+      if (!sources[type]) return null;
+  
+      return new TileLayer({
+        source: sources[type](),
+        zIndex: 0,
+        visible: true
+      });
     }
   
-    if (!sources[type]) return null
-  
-    return new TileLayer({
-      source: sources[type](),
-      zIndex: 0,
-      visible: true
-    })
-  }
 
   const updateLayerOpacity = (layerName) => {
     layerStore.setLayerOpacity(layerName, layerOpacities.value[layerName])
@@ -206,6 +225,12 @@ export function useLayerManagement(map) {
   const toggleLayer = (layerName) => {
     if (!map) return
 
+    // Check if layer is protected and user is not authenticated
+    if (layerStore.isLayerProtected(layerName) && !authStore.isAuthenticated) {
+      console.log('Cannot toggle protected layer - user not authenticated')
+      return
+    }
+
     // Get current state
     const currentlyActive = layers.value[layerName];
     // Toggle state in store
@@ -228,6 +253,10 @@ export function useLayerManagement(map) {
       }
       layerStore.setLegendUrl(layerName, null);
     }
+  }
+
+  const isLayerAvailable = (layerName) => {
+    return !layerStore.isLayerProtected(layerName) || authStore.isAuthenticated
   }
 
   const updateLayerZIndices = () => {
@@ -260,30 +289,41 @@ export function useLayerManagement(map) {
     layerStore.updateLayerOrder(layerOrder.value);
   }
 
-  const unloadAllBackgroundLayers = () => {
-    map.getLayers().getArray()
-      .filter(layer => layer instanceof TileLayer)
-      .forEach(layer => map.removeLayer(layer))
+    const unloadAllBackgroundLayers = () => {
+      // Remove all existing layers from the map
+      const layers = map.getLayers();
+      const layersArray = layers.getArray();
+      for (let i = layersArray.length - 1; i >= 0; i--) {
+        const layer = layersArray[i];
+        if (layer instanceof TileLayer) {
+          map.removeLayer(layer);
+        }
+      }
 
-    if (activeBackgroundLayer.value) {
-      activeBackgroundLayer.value = null
+      // Clear references
+      if (activeBackgroundLayer.value) {
+        activeBackgroundLayer.value = null;
+      }
+      backgroundLayers.value = {};
     }
-    backgroundLayers.value = {}
-  }
 
-  const changeBackground = () => {
-    unloadAllBackgroundLayers()
-    uiStore.setMapAttribution(getAttributionForBackground(selectedBackground.value))
-
-    if (selectedBackground.value !== 'none') {
-      const layer = createBackgroundLayer(selectedBackground.value)
-      if (layer) {
-        backgroundLayers.value[selectedBackground.value] = layer
-        activeBackgroundLayer.value = layer
-        map.addLayer(layer)
+    const changeBackground = async () => {
+      try {
+        unloadAllBackgroundLayers();
+        uiStore.setMapAttribution(getAttributionForBackground(selectedBackground.value));
+  
+        if (selectedBackground.value !== 'none') {
+          const layer = await createBackgroundLayer(selectedBackground.value);
+          if (layer) {
+            backgroundLayers.value[selectedBackground.value] = layer;
+            activeBackgroundLayer.value = layer;
+            map.addLayer(layer);
+          }
+        }
+      } catch (error) {
+        console.error('Error changing background:', error);
       }
     }
-  }
 
   // Initialize active layers when map is provided
   if (map) {
@@ -311,6 +351,8 @@ export function useLayerManagement(map) {
     layerSources,
     layerOpacities,
     updateLayerOpacity,
-    getLegendUrl
+    getLegendUrl,
+    vectorStyles,
+    isLayerAvailable
   }
 }

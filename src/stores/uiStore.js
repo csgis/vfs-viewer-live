@@ -7,7 +7,8 @@ export const useUIStore = defineStore('ui', {
     isSidebarExpanded: true,
     activeControl: null,
     mapAttribution: 'OpenStreetMap contributors',
-    shouldShowMainSidebar: false
+    shouldShowMainSidebar: false,
+    isMapSidebarVisible: true  // New state to track map sidebar visibility
   }),
   
   actions: {
@@ -31,21 +32,22 @@ export const useUIStore = defineStore('ui', {
     },
 
     setMapAttribution(attribution) {
-        this.mapAttribution = attribution
-      },
+      this.mapAttribution = attribution
+    },
 
     setShowMainSidebar() {
-        this.shouldShowMainSidebar = true
+      this.shouldShowMainSidebar = true
+      this.isMapSidebarVisible = false  // Hide map sidebar when main sidebar is shown
     },
 
     hideMainSidebar() {
-        this.shouldShowMainSidebar = false
+      this.shouldShowMainSidebar = false
+      this.isMapSidebarVisible = true   // Show map sidebar when main sidebar is hidden
     }
-
   },
   
   getters: {
-    isHandleVisible: (state) => !state.isInfoPanelVisible,
+    isHandleVisible: (state) => !state.isInfoPanelVisible && state.isMapSidebarVisible,
     getMainSidebarVisibility: (state) => state.shouldShowMainSidebar
   }
 })

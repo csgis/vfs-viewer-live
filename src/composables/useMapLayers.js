@@ -34,23 +34,6 @@ export function useMapLayers() {
           visible: false
         })
         break
-      case 'webatlas':
-        layer = new TileLayer({
-          source: new TileWMS({
-            url: 'https://sgx.geodatenzentrum.de/wms_basemapde',
-            params: {
-              'LAYERS': 'de_basemapde_web_raster_farbe',
-              'FORMAT': 'image/png',
-              'VERSION': '1.3.0',
-              'TILED': true
-            },
-            crossOrigin: 'anonymous',
-            wrapX: false
-          }),
-          zIndex: 0,
-          visible: false
-        })
-        break
       case 'terrain':
         layer = new TileLayer({
           source: new TileWMS({

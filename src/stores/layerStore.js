@@ -16,6 +16,7 @@ export const useLayerStore = defineStore({
       soilNutrients: false,
       alkisParzellarkarte: false,
     },
+    protectedLayers: ['soilNutrients'],
     legends: {},
     layerOrder: [
       'soilNutrients',
@@ -65,6 +66,9 @@ export const useLayerStore = defineStore({
       return Object.entries(state.layers)
         .filter(([, isVisible]) => isVisible)
         .map(([name]) => name);
+    },
+    isLayerProtected: (state) => (layerName) => {
+      return state.protectedLayers.includes(layerName)
     }
   }
 });
