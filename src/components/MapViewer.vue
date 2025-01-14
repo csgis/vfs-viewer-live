@@ -36,9 +36,9 @@
       <!-- Header -->
       <div class="p-4 border-b border-slate-600" :class="{ 'hidden': !uiStore.isSidebarExpanded }">
         <img 
-          src="img/logo2.svg" 
+          src="img/headerLogo.gif" 
           alt="Logo" 
-          class="h-8 object-contain"
+          class="h-16 object-contain"
         />
       </div>
 

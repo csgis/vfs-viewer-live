@@ -18,9 +18,9 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
     {
-      path: '/fachschalen',
-      name: 'fachschalen',
-      component: () => import('../components/FachschalenComponent.vue'),
+      path: '/baumarteneignungstabelle',
+      name: 'baumartenComponent',
+      component: () => import('../components/baumartenComponent.vue'),
       meta: { requiresAuth: true }  // Protected route
     },
     {

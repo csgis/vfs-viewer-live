@@ -8,7 +8,9 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@headlessui/tailwindcss": "^0.2.1",
     "@headlessui/vue": "^1.7.23",
+    "@heroicons/vue": "^2.2.0",
     "core-js": "^3.8.3",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.2",

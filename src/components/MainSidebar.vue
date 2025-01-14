@@ -8,9 +8,9 @@
                 <!-- Header -->
             <div class="p-4 border-b border-gray-200">
                 <img 
-                src="img/logo2.svg" 
+                src="img/headerLogo.gif" 
                 alt="Logo" 
-                class="h-8 object-contain"
+                class="h-16 object-contain"
                 />
             </div>
             
@@ -38,10 +38,10 @@
                 </div>
                 </button>
                 <button 
-                    @click="authStore.isAuthenticated ? navigateTo('/fachschalen') : null"
+                    @click="authStore.isAuthenticated ? navigateTo('/baumarteneignungstabelle') : null"
                     class="w-full text-left p-3 rounded-lg transition-colors"
                     :class="[
-                        currentPath === '/fachschalen' ? 'bg-gray-300 text-black-200' : '',
+                        currentPath === '/baumarteneignungstabelle' ? 'bg-gray-300 text-black-200' : '',
                         authStore.isAuthenticated 
                         ? 'text-black hover:bg-gray-300' 
                         : 'text-gray-400 cursor-not-allowed'
@@ -51,7 +51,7 @@
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
-                        <span>Fachschalen</span>
+                        <span>Baumarten-Eignungstabelle</span>
                         <!-- Optional: Add a lock icon for unauthenticated users -->
                         <svg 
                         v-if="!authStore.isAuthenticated" 

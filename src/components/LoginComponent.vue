@@ -4,7 +4,7 @@
     <div class="max-w-md w-full space-y-8">
       <!-- Header -->
       <div>
-        <img class="mx-auto h-12 w-auto" src="img/logo2.svg" alt="Logo">
+        <img class="mx-auto h-12 w-auto" src="img/headerLogo.gif" alt="Logo">
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
           Anmelden
         </h2>
