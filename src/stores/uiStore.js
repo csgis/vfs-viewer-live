@@ -1,16 +1,17 @@
-// stores/uiStore.js
 import { defineStore } from 'pinia'
 
 export const useUIStore = defineStore('ui', {
-  state: () => ({
-    isInfoPanelVisible: false,
-    isSidebarExpanded: true,
-    activeControl: null,
-    mapAttribution: 'OpenStreetMap contributors',
-    shouldShowMainSidebar: false,
-    isMapSidebarVisible: true  // New state to track map sidebar visibility
-  }),
-  
+  state: () => {
+    return {
+      isInfoPanelVisible: false,
+      mainSidebarExpanded: true,
+      mapSidebarExpanded: true,
+      activeControl: null,
+      mapAttribution: 'OpenStreetMap contributors',
+      isMapSidebarVisible: true
+    }
+  },
+
   actions: {
     setInfoPanelVisibility(isVisible) {
       this.isInfoPanelVisible = isVisible
@@ -19,8 +20,15 @@ export const useUIStore = defineStore('ui', {
       }
     },
 
-    toggleSidebar() {
-      this.isSidebarExpanded = !this.isSidebarExpanded
+    toggleMainSidebar() {
+      const isMapPage = window.location.pathname === '/karte'
+      if (!isMapPage) {
+        this.mainSidebarExpanded = !this.mainSidebarExpanded
+      }
+    },
+
+    toggleMapSidebar() {
+      this.mapSidebarExpanded = !this.mapSidebarExpanded
     },
 
     toggleControl(control) {
@@ -35,19 +43,29 @@ export const useUIStore = defineStore('ui', {
       this.mapAttribution = attribution
     },
 
-    setShowMainSidebar() {
-      this.shouldShowMainSidebar = true
-      this.isMapSidebarVisible = false  // Hide map sidebar when main sidebar is shown
+    showMapSidebar() {
+      this.isMapSidebarVisible = true
+      this.mainSidebarExpanded = false  // Force collapse main sidebar
     },
 
-    hideMainSidebar() {
-      this.shouldShowMainSidebar = false
-      this.isMapSidebarVisible = true   // Show map sidebar when main sidebar is hidden
-    }
+    hideMapSidebar() {
+      this.isMapSidebarVisible = false
+      const isMapPage = window.location.pathname === '/karte'
+      if (!isMapPage) {
+        this.mainSidebarExpanded = true
+      }
+    },
   },
   
+  setMainSidebarState(expanded) {
+    if (window.location.pathname !== '/karte') {
+      this.mainSidebarExpanded = expanded
+    }
+  },
+
   getters: {
     isHandleVisible: (state) => !state.isInfoPanelVisible && state.isMapSidebarVisible,
-    getMainSidebarVisibility: (state) => state.shouldShowMainSidebar
+    getEffectiveMainSidebarWidth: (state) => state.mainSidebarExpanded ? 'w-1/4' : 'w-12',
+    getEffectiveMapSidebarWidth: (state) => state.mapSidebarExpanded ? 'w-1/4' : 'w-12'
   }
 })

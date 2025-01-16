@@ -4,37 +4,39 @@
     <div 
       ref="mapElement" 
       :class="`absolute inset-0 transition-all duration-300 ${
-        uiStore.isSidebarExpanded ? 'ml-[25%]' : 'ml-12'
+        !uiStore.isMapSidebarVisible ? 'ml-12' :  // just main nav (3rem)
+        uiStore.mapSidebarExpanded ? 'ml-[calc(3rem+25%-2%)]' : ''  // Adjusted for exact alignment
       }`"
     ></div>
 
-    <!-- Map Sidebar - Positioned absolutely -->
+    <!-- Map Sidebar -->
     <div 
-    :class="`fixed left-0 top-0 bg-white shadow-lg flex flex-col z-50 h-full transition-all duration-300 ${
-      !uiStore.isMapSidebarVisible ? 'hidden' : 
-      uiStore.isSidebarExpanded ? 'w-1/4' : 'w-12'
-    }`"
-  >
-    <!-- Toggle Button -->
-    <button 
-      @click="uiStore.toggleSidebar"
-      class="absolute right-0 translate-x-full top-1/2 transform -translate-y-1/2 w-6 h-12 bg-white rounded-r-lg shadow-md flex items-center justify-center border border-l-0 border-gray-400 z-50"
-      aria-label="Toggle sidebar"
-      :class="{ 'hidden': !uiStore.isHandleVisible }"
+      :class="`fixed left-12 bg-white shadow-lg flex flex-col h-full transition-all duration-300 ${
+        !uiStore.isMapSidebarVisible ? 'hidden' : 
+        uiStore.mapSidebarExpanded ? 'w-1/4' : ''
+      }`"
     >
-      <svg 
-        class="w-4 h-4 text-gray-400 transform transition-transform duration-300"
-        :class="uiStore.isSidebarExpanded ? 'rotate-0' : 'rotate-180'"
-        fill="none" 
-        stroke="currentColor" 
-        viewBox="0 0 24 24"
+
+      <!-- Toggle Button -->
+      <button 
+        @click="uiStore.toggleMapSidebar"
+        class="absolute right-0 translate-x-full top-1/2 transform -translate-y-1/2 w-6 h-12 bg-white rounded-r-lg shadow-md flex items-center justify-center border border-l-0 border-gray-400 z-50"
+        aria-label="Toggle sidebar"
+        :class="{ 'hidden': !uiStore.isHandleVisible }"
       >
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-      </svg>
-    </button>
+        <svg 
+          class="w-4 h-4 text-gray-400 transform transition-transform duration-300"
+          :class="uiStore.mapSidebarExpanded ? 'rotate-0' : 'rotate-180'"
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
 
       <!-- Header -->
-      <div class="p-4 border-b border-slate-600" :class="{ 'hidden': !uiStore.isSidebarExpanded }">
+      <div class="p-4 border-b border-slate-600" :class="{ 'hidden': !uiStore.mapSidebarExpanded }">
         <img 
           src="img/headerLogo.gif" 
           alt="Logo" 
@@ -43,7 +45,7 @@
       </div>
 
       <!-- Content -->
-      <div class="flex-1 overflow-y-auto" :class="{ 'hidden': !uiStore.isSidebarExpanded }">
+      <div class="flex-1 overflow-y-auto" :class="{ 'hidden': !uiStore.mapSidebarExpanded }">
         <div class="p-4 text-black">
           <LayerAccordion 
             v-if="map"
@@ -52,18 +54,7 @@
         </div>
       </div>
 
-      <!-- Footer -->
-      <div class="p-4 border-t border-black" :class="{ 'hidden': !uiStore.isSidebarExpanded }">
-        <button 
-          @click="navigateBack"
-          class="w-full p-3 flex items-center text-black hover:bg-gray-100 rounded-lg"
-        >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Hauptmenü
-        </button>
-      </div>
+
     </div>
   
     <!-- Control Buttons Panel -->
@@ -109,11 +100,6 @@
         :disabled="!navigateBackRef?.hasHistory"
         @click="navigateBackRef?.goBack"
       >
-        <div class="absolute bottom-0 left-0 text-xs bg-white p-1 rounded hidden">
-          ref: {{!!navigateBackRef}} | 
-          hasHistory: {{!!navigateBackRef?.hasHistory}} |
-          raw: {{navigateBackRef}}
-        </div>
         <img src="../assets/back.svg" class="h-6 w-6" alt="Back">
       </TooltipButton>
 
@@ -194,14 +180,13 @@
       >
         <img src="../assets/print.svg" class="h-6 w-6" alt="Print">
       </TooltipButton>
-
     </div>
   
-      <!-- Scale Info -->
-      <ScaleInfo :map="map" v-if="map" />
+    <!-- Scale Info -->
+    <ScaleInfo :map="map" v-if="map" />
 
-      <!-- Map Attribution -->
-      <MapAttribution />
+    <!-- Map Attribution -->
+    <MapAttribution />
 
     <!-- Hidden Components -->
     <HelpLink ref="helpRef" />
@@ -247,20 +232,20 @@
       @close="toggleControl(null)"
     />
     <MeasureRadius
-    v-if="uiStore.activeControl === 'measure-radius' && map"
-    :map="map"
-    :active="true"
-    @close="toggleControl(null)"
-  />
+      v-if="uiStore.activeControl === 'measure-radius' && map"
+      :map="map"
+      :active="true"
+      @close="toggleControl(null)"
+    />
   </div>
 </template>
 
-<script>
-import { ref, onMounted, onUnmounted, onActivated, onDeactivated, watch, nextTick } from 'vue';
+<script>import { ref, onMounted, onUnmounted, onActivated, onDeactivated, watch, nextTick, computed } from 'vue';
 import { Map, View } from 'ol';
 import { fromLonLat } from 'ol/proj';
 import { defaults as defaultControls } from 'ol/control';
-import { useMapLayers } from '../composables/useMapLayers';
+// import { useMapLayers } from '../composables/useMapLayers';
+import { useLayerManagement } from '../composables/useLayerManagement'; 
 import LayerAccordion from './LayerAccordion.vue';
 import ZoomHome from './ZoomHome.vue';
 import HelpLink from './HelpLink.vue';
@@ -271,13 +256,14 @@ import MeasureArea from './MeasureArea.vue';
 import InfoTool from './InfoTool.vue';
 import PrintTool from './PrintTool.vue';
 import TooltipButton from './TooltipButton.vue';
-import { useRoute } from 'vue-router';
 import CitySearch from './CitySearch.vue';
-import { useUIStore } from '../stores/uiStore'
+import { useUIStore } from '../stores/uiStore';
 import { useAuthStore } from '../stores/authStore';
-import MapAttribution from './MapAttribution.vue'
-import ScaleInfo from './ScaleInfo.vue'
+import MapAttribution from './MapAttribution.vue';
+import ScaleInfo from './ScaleInfo.vue';
 import MeasureRadius from './MeasureRadius.vue';
+import { useRoute } from 'vue-router'
+
 
 export default {
   name: 'MapViewer',
@@ -299,22 +285,21 @@ export default {
   },
 
   setup() {
-    const uiStore = useUIStore()
+    const uiStore = useUIStore();
     const mapElement = ref(null);
     const map = ref(null);
     const zoomHomeRef = ref(null);
     const helpRef = ref(null);
     const navigateBackRef = ref(null);
     const zoomToExtentRef = ref(null);
-    const route = useRoute();
-    const { initializeBackground, cleanup } = useMapLayers();
-    const authStore = useAuthStore()
+    const { cleanup } = useLayerManagement();
+    const authStore = useAuthStore();
 
     // Check if we have an extent
     if (authStore.hasMapExtent) {
-      console.log('Map extent:', authStore.mapExtent)
+      console.log('Map extent:', authStore.mapExtent);
     } else {
-      console.log('No map extent available')
+      console.log('No map extent available');
     }
 
     const handleResize = () => {
@@ -325,163 +310,226 @@ export default {
       }
     };
 
-    watch(() => uiStore.isSidebarExpanded, () => {
-      setTimeout(updateZoomControlPosition, 300);
-    });
-
     // Update the zoom control position function
     const updateZoomControlPosition = () => {
       const zoomControl = document.querySelector('.ol-zoom');
       if (zoomControl) {
-        if (uiStore.isSidebarExpanded) {
-          zoomControl.style.setProperty('left', 'calc(25vw + 0.5rem)', 'important');
-        } else {
-          zoomControl.style.setProperty('left', '4rem', 'important');
-        }
+        const mainSidebarWidth = uiStore.mainSidebarExpanded ? '25vw' : '3rem';
+        const mapSidebarWidth = uiStore.isMapSidebarVisible && uiStore.mapSidebarExpanded ? '25vw' : '3rem';
+        const totalOffset = `calc(${mainSidebarWidth} + ${mapSidebarWidth} + 0.5rem)`;
+        zoomControl.style.setProperty('left', totalOffset, 'important');
       }
     };
 
-  // Also update position when map is initialized
-  watch(() => map.value, (newMap) => {
-    if (newMap) {
-      // Wait a brief moment for the controls to be rendered
-      setTimeout(updateZoomControlPosition, 100);
-    }
-  });
+    // Watch both sidebars for changes
+    watch([
+      () => uiStore.mainSidebarExpanded,
+      () => uiStore.mapSidebarExpanded,
+      () => uiStore.isMapSidebarVisible
+    ], () => {
+      setTimeout(updateZoomControlPosition, 300);
+      // Trigger a resize event to update the map size
+      if (map.value) {
+        map.value.updateSize();
+      }
+    });
 
-  // Update position on component mount
+    watch(() => map.value, (newMap) => {
+      if (newMap) {
+        const { changeBackground } = useLayerManagement(newMap);
+        changeBackground('luftbilder', newMap);
+      }
+    });
 
+    watch(() => map.value, async (newMap) => {
+      if (newMap) {
+        await nextTick();
+        updateZoomControlPosition();
+      }
+    });
 
+    // Watch for authentication changes
+    watch(
+      () => authStore.isAuthenticated,
+      (isAuthenticated) => {
+        if (!isAuthenticated) {
+          cleanupMap()
+        }
+      }
+    )
 
-  watch(() => map.value, async (newMap) => {
-    if (newMap) {
-      await nextTick();
-      console.log('Map updated, checking navigateBackRef:', {
-        ref: navigateBackRef.value,
-        hasHistory: navigateBackRef.value?.hasHistory,
-      });
-    }
-  });
+    
 
-  const cleanupMap = () => {
-    console.log('Cleaning up map...');
+    const cleanupMap = () => {
     if (map.value) {
-      cleanup(map.value);
-      map.value.setTarget(null);
-      map.value = null;
+      cleanup(map.value)
+      map.value.setTarget(null)
+      map.value.dispose() // Properly dispose of the map
+      map.value = null
     }
-    uiStore.activeControl = null;
-    window.removeEventListener('resize', handleResize);
-  };
+    uiStore.activeControl = null
+    window.removeEventListener('resize', handleResize)
+  }
 
-  const initializeMap = () => {
-      console.log('Initializing map...');
-      
-      cleanupMap();
 
-      let center = fromLonLat([11.4, 48.7]); // Default Bavaria center
-      let zoom = 8; // Default zoom
+    const calculateZoomToFitExtent = (map, extent) => {
+  // Get the map's size
+  const mapSize = map.getSize();
+  
+  if (!mapSize) {
+    console.warn('Map size not available for zoom calculation');
+    return 8; // Default zoom
+  }
 
-      // Check for user extent from auth store
-      if (authStore.mapExtent) {
-        console.log('Found user extent:', authStore.mapExtent);
-        center = [
-          (authStore.mapExtent[0] + authStore.mapExtent[2]) / 2,
-          (authStore.mapExtent[1] + authStore.mapExtent[3]) / 2
-        ];
-      }
+  // Calculate width and height of the extent
+  const extentWidth = Math.abs(extent[2] - extent[0]);
+  const extentHeight = Math.abs(extent[3] - extent[1]);
 
-      // URL parameters override both default and user extent
-      if (route.query.extent && route.query.zoom) {
-        try {
-          const [centerX, centerY] = route.query.extent.split(',').map(Number);
-          const urlZoom = Number(route.query.zoom);
+  // Get the map's width and height
+  const [mapWidth, mapHeight] = mapSize;
 
-          if (!isNaN(centerX) && !isNaN(centerY) && !isNaN(urlZoom)) {
-            center = [centerX, centerY];
-            zoom = urlZoom;
-            console.log('Using URL parameters for map initialization:', { center, zoom });
-          } else {
-            console.log('Invalid URL parameters, using previous values');
-          }
-        } catch (error) {
-          console.warn('Error parsing URL parameters:', error);
-        }
-      }
+  // Calculate zoom levels based on width and height
+  const widthZoom = Math.floor(
+    Math.log2(mapWidth / (extentWidth * 1.1)) // 1.1 adds a small padding
+  );
+  
+  const heightZoom = Math.floor(
+    Math.log2(mapHeight / (extentHeight * 1.1))
+  );
 
-      // Create initial view
-      const view = new View({
-        center: center,
-        zoom: zoom,
-        minZoom: 7,
-        maxZoom: 19,
-        constrainResolution: true,
-        smoothResolutionConstraint: true,
-        smoothExtentConstraint: true,
+  // Take the lower zoom level to ensure entire extent is visible
+  const calculatedZoom = Math.min(widthZoom, heightZoom);
+
+  // Constrain the zoom between min and max
+  return Math.max(7, Math.min(calculatedZoom, 19));
+};
+
+
+const initializeMap = () => {
+  cleanupMap();
+
+  let center = fromLonLat([11.4, 48.9]); // Default Bavaria center
+  let zoom = 8; // Default zoom
+  let extent = null;
+
+  // First, check URL parameters
+  const route = useRoute();
+  if (route.query.extent) {
+    const [centerX, centerY, width, height] = route.query.extent.split(',').map(Number);
+    const urlZoom = Number(route.query.zoom);
+
+    if (!isNaN(centerX) && !isNaN(centerY) && !isNaN(urlZoom)) {
+      console.log('Using URL extent:', route.query.extent);
+      center = [centerX, centerY];
+      zoom = urlZoom;
+      extent = [
+        centerX - width / 2, 
+        centerY - height / 2, 
+        centerX + width / 2, 
+        centerY + height / 2
+      ];
+    }
+  } 
+  // If no URL extent, check user extent from auth store
+  else if (authStore.mapExtent) {
+    console.log('Found user extent:', authStore.mapExtent);
+    const [minX, minY, maxX, maxY] = authStore.mapExtent;
+    
+    // Calculate center
+    center = [
+      (minX + maxX) / 2,
+      (minY + maxY) / 2
+    ];
+    
+    // Set extent
+    extent = [minX, minY, maxX, maxY];
+  }
+
+  // Create map first to enable zoom calculation
+  map.value = new Map({
+    target: mapElement.value,
+    layers: [],
+    controls: defaultControls({
+      zoom: true,
+      attribution: false
+    }),
+    view: new View({
+      center: center,
+      zoom: zoom,
+      minZoom: 7,
+      maxZoom: 19,
+      constrainResolution: true,
+      smoothResolutionConstraint: true,
+      smoothExtentConstraint: true,
+    }),
+    pixelRatio: 1,
+    loadTilesWhileAnimating: true,
+    loadTilesWhileInteracting: true,
+  });
+
+  // Calculate zoom if extent is available
+  if (extent) {
+    // Wait a bit to ensure map is fully initialized
+    nextTick(() => {
+      const calculatedZoom = calculateZoomToFitExtent(map.value, extent);
+      console.log('Calculated zoom:', calculatedZoom);
+
+      const view = map.value.getView();
+      view.setCenter(center);
+      view.setZoom(calculatedZoom);
+
+      // Optionally fit the view
+      view.fit(extent, {
+        padding: [50, 50, 50, 50],
+        constrainResolution: true
       });
+    });
+  }
 
-      map.value = new Map({
-        target: mapElement.value,
-        layers: [],
-        controls: defaultControls({
-          zoom: true,
-          attribution: false
-        }),
-        view: view,
-        pixelRatio: 1,
-        loadTilesWhileAnimating: true,
-        loadTilesWhileInteracting: true,
-      });
+  // Initialize layer management
+  // const { initializeLayers } = useLayerManagement(map.value);
+  // nextTick(() => {
+  //   initializeLayers();
+  // });
 
-      // Initialize background layers
-      initializeBackground(map.value);
-
-      // Set up resize handler
-      window.addEventListener('resize', handleResize);
-
-      // Fit to extent after map is fully initialized
-      if (authStore.mapExtent && !route.query.extent) {  // Only if no URL extent
-        // Wait for next tick to ensure map is ready
-        nextTick(() => {
-          map.value.getView().fit(authStore.mapExtent, {
-            padding: [50, 50, 50, 50],
-            duration: 1000  // Smooth animation
-          });
-        });
-      }
-    };
-
-
+  // Set up resize handler
+  window.addEventListener('resize', handleResize);
+}
+    
     const toggleControl = (control) => {
       uiStore.toggleControl(control);
     };
 
+    const calculateMapMargin = computed(() => {
+
+      const mapSidebarMargin = uiStore.isMapSidebarVisible 
+    ? (uiStore.mapSidebarExpanded ? 'calc(25% + 3rem)' : '6rem') 
+    : '3rem'
+
+  return mapSidebarMargin
+})
+
     const navigateBack = () => {
-      uiStore.setShowMainSidebar()
-    }
+      uiStore.hideMapSidebar();
+    };
 
     onMounted(() => {
-      console.log('Component mounted');
-      console.log('MapViewer mounted - navigateBackRef:', navigateBackRef.value)
-      setTimeout(updateZoomControlPosition, 100);
-      uiStore.hideMainSidebar()
+      uiStore.showMapSidebar(); // Initialize with map sidebar visible
       initializeMap();
+      setTimeout(updateZoomControlPosition, 100);
     });
 
     onUnmounted(() => {
-      console.log('Component unmounted');
       cleanupMap();
     });
 
     onActivated(() => {
-      console.log('Component activated');
       if (!map.value) {
         initializeMap();
       }
     });
 
     onDeactivated(() => {
-      console.log('Component deactivated');
       cleanupMap();
     });
 
@@ -495,6 +543,7 @@ export default {
       zoomToExtentRef,
       zoomHomeRef,
       uiStore,
+      calculateMapMargin
     };
   }
 };

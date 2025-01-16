@@ -1,41 +1,66 @@
 // stores/layerStore.js
 import { defineStore } from 'pinia'
+import { useAuthStore } from './authStore';
 
 export const useLayerStore = defineStore({
-  id: 'layer',  // Make sure to provide an id
-  state: () => ({
-    layers: {
-      flurkartenSchnitt: false,
-      regierungsbezirk: false,
-      landkreis: false,
-      gemeinde: false,
-      kartiergebiete: true,
-      trinkwasser: false,
-      landschaftsschutz: false,
-      naturschutz: false,
-      soilNutrients: false,
-      alkisParzellarkarte: false,
-    },
-    protectedLayers: ['soilNutrients'],
-    legends: {},
-    layerOrder: [
-      'soilNutrients',
-      'regierungsbezirk',
-      'landkreis',
-      'gemeinde',
-      'flurkartenSchnitt',
-      'kartiergebiete',
-      'trinkwasser',
-      'landschaftsschutz',
-      'naturschutz',
-      'alkisParzellarkarte'
-    ],
-    layerOpacities: {},
-    expandedLegends: {},
-    legendSizes: {}
-  }),
+  id: 'layer',
+  state: () => {
+    // Need to create a state function that returns the object directly
+    return {
+      layers: (() => {
+        const authStore = useAuthStore()
+        return {
+          flurkartenSchnitt: false,
+          regierungsbezirk: false,
+          landkreis: false,
+          gemeinde: false,
+          kartiergebiete: !authStore.isAuthenticated,
+          trinkwasser: false,
+          landschaftsschutz: false,
+          naturschutz: false,
+          soilNutrients: false,
+          alkisParzellarkarte: false,
+          standorte: authStore.isAuthenticated,
+        }
+      })(),
+      protectedLayers: ['soilNutrients', 'standorte', 'vfs:standorte'],
+      layerNeedsBearerToken: ['standorte', 'vfs:standorte'],
+      legends: {},
+      layerOrder: [
+        'flurkartenSchnitt',
+        'alkisParzellarkarte',
+        'trinkwasser',
+        'landschaftsschutz',
+        'naturschutz',
+        'standorte',
+        'kartiergebiete',
+        'soilNutrients',
+        'gemeinde',
+        'landkreis',
+        'regierungsbezirk'
+      ],
+      layerOpacities: {},
+      expandedLegends: {},
+      legendSizes: {}
+    }
+  },
 
   actions: {
+
+    cleanup() {
+      const authStore = useAuthStore()
+      // Update the layers based on authentication status
+      this.layers = {
+        ...this.layers,
+        kartiergebiete: !authStore.isAuthenticated,
+        standorte: authStore.isAuthenticated
+      }
+      // Reset other state
+      this.legends = {}
+      this.layerOpacities = {}
+      this.expandedLegends = {}
+      this.legendSizes = {}
+    },
     setLayerVisibility(layerName, isVisible) {
       this.layers[layerName] = isVisible;
     },
@@ -69,6 +94,9 @@ export const useLayerStore = defineStore({
     },
     isLayerProtected: (state) => (layerName) => {
       return state.protectedLayers.includes(layerName)
+    },
+    layerNeedsBearer: (state) => (layerName) => {
+      return state.layerNeedsBearerToken.includes(layerName)
     }
   }
 });

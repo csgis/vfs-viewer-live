@@ -1,5 +1,5 @@
-import { getCenter, getHeight, getWidth } from 'ol/extent'
 // useMapHistory.js
+import { getCenter, getHeight, getWidth } from 'ol/extent'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 

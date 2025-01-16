@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 overflow-auto">
+  <div class="p-12 overflow-auto h-screen">
     <h1 class="text-2xl font-bold mb-4">Baumarten-Eignungstabelle</h1>
     
     <!-- Controls -->
@@ -166,7 +166,7 @@
 <div class="bg-white rounded-lg shadow ">
   <div>
     <table class="w-full divide-y divide-gray-200 text-xs">
-      <thead class="bg-gray-50 sticky top-0">
+      <thead class="bg-gray-50 sticky top-0 z-10 [&.is-sticky]:shadow-md">
         <tr>
           <th class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
             Standort
@@ -188,12 +188,20 @@
           <td class="px-3 py-2 text-xs w-96">
           <div class="break-words">{{ item.sto_name }}</div>
         </td>
-          <td v-for="column in treeColumns" :key="column" 
-              @click="openEditDialog(item, column)"
-              :class="getCellClass(item[column.toLowerCase()])"
-              class="px-3 py-2 text-xs whitespace-nowrap cursor-pointer">
-            {{ item[column.toLowerCase()] }}
-          </td>
+        <td v-for="column in treeColumns" :key="column" 
+            @click="openEditDialog(item, column)"
+            :class="getCellClass(item[column.toLowerCase()])"
+            class="px-3 py-2 text-xs whitespace-nowrap cursor-pointer group relative">
+            <span>{{ item[column.toLowerCase()] }}</span>
+            <div class="absolute z-50 invisible group-hover:visible bg-gray-900 text-white text-xs rounded py-1 px-2 -top-8 left-1/2 transform -translate-x-1/2 min-w-max">
+              {{ getTooltipText(column, item[column.toLowerCase()]) }}
+              <!-- Tooltip arrow -->
+              <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full w-0 h-0 
+                          border-l-8 border-l-transparent 
+                          border-r-8 border-r-transparent 
+                          border-t-8 border-gray-900"></div>
+            </div>
+        </td>
         </tr>
       </tbody>
     </table>
@@ -249,7 +257,7 @@ import html2pdf from 'html2pdf.js'
 
 const authStore = useAuthStore()
 const uiStore = useUIStore()
-uiStore.setShowMainSidebar()
+uiStore.hideMapSidebar()
 
 // Data
 const baumarten = ref([])
@@ -268,6 +276,29 @@ const treeColumns = [
   'BERGAHORN', 'ESCHE', 'WINTERLINDE', 'SCHWARZERLE', 
   'TRAUBENEICHE', 'STIELEICHE', 'EICHE', 'KIRSCHE'
 ]
+
+const getTooltipText = (column, value) => {
+  if (!value || value === '-') return `${column}: Keine Bewertung`
+  
+  const [suitability] = value.split('/')
+  let suitabilityText = ''
+  
+  switch(suitability) {
+    case '1':
+      suitabilityText = 'geeignet'
+      break
+    case '2':
+      suitabilityText = 'möglich'
+      break
+    case '3':
+      suitabilityText = 'wenig geeignet'
+      break
+    default:
+      suitabilityText = 'keine Bewertung'
+  }
+  
+  return `${column}: ${suitabilityText} (${value})`
+}
 
 // Fetch data
 const fetchData = async () => {
@@ -490,6 +521,31 @@ const exportCSV = () => {
 
 // Initialize
 onMounted(() => {
-  fetchData()
+  uiStore.hideMapSidebar();
+  fetchData();
+
+  // Get the correct scrollable container (the div with p-12 and overflow-auto)
+  const thead = document.querySelector('thead')
+  const container = document.querySelector('.overflow-auto')
+
+  if (container && thead) {
+    container.addEventListener('scroll', () => {
+      if (container.scrollTop > 0) {
+        thead.classList.add('is-sticky')
+      } else {
+        thead.classList.remove('is-sticky')
+      }
+    })
+  }
 })
 </script>
+
+<style>
+thead {
+  transition: box-shadow 0.2s ease;
+}
+
+thead.is-sticky {
+  box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.1), 0 1px 0 rgb(0 0 0 / 0.1);
+}
+</style>

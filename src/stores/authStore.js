@@ -83,12 +83,29 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    getAuthToken() {
+      return this.token 
+    },
+
     logout() {
+      // Import and use layerStore inside the action to avoid circular dependency
+      const { useLayerStore } = require('./layerStore')
+      const layerStore = useLayerStore()
+      
+      // Reset layer store
+      layerStore.$reset()
+      
+      // Clear auth state
       this.token = null
       this.user = null
       this.mapExtent = null
+      
+      // Clear localStorage
       localStorage.removeItem('token')
       localStorage.removeItem('mapExtent')
+      localStorage.removeItem('transformedMapExtent')
+      localStorage.removeItem('userPreferences')
+      localStorage.removeItem('mapSettings')
     },
 
     // Other methods remain the same...

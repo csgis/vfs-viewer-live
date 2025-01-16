@@ -25,15 +25,12 @@ console.log('NavigateBack setup - Initial canGoBack:', canGoBack.value)
 const { goToPreviousExtent, updateMapFromURL, hasHistory } = useMapHistory(props.map)
 
 watch(hasHistory, (newValue) => {
-  console.log('NavigateBack - hasHistory changed to:', newValue)
   canGoBack.value = newValue
-  console.log('NavigateBack - canGoBack updated to:', canGoBack.value)
 }, { immediate: true })
 
 watch(
   () => route.query,
   () => {
-    console.log('NavigateBack - route.query changed:', route.query)
     updateMapFromURL()
   }
 )

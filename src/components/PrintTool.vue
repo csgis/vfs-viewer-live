@@ -88,7 +88,12 @@ const title = ref('Kartenausschnitt');
 const format = ref('a4');
 const includeLegends = ref(true);
 
-const { getLayerLabel, getLegendUrl } = useLayerManagement(props.map);
+// Get layer management functions and state
+const { 
+    getLayerLabel, 
+    getLegendUrl, 
+    activeBackgroundLayer 
+  } = useLayerManagement(props.map)
 const layerStore = useLayerStore();
 const uiStore = useUIStore();
 const { layers } = storeToRefs(layerStore);
@@ -98,190 +103,215 @@ const handleClose = () => {
   uiStore.clearActiveControl();
 };
 
+
+
 const generateAndDownloadPDF = async () => {
-  document.body.style.cursor = 'progress';
-  message.value = 'Erstelle PDF...';
+ document.body.style.cursor = 'progress';
+ message.value = 'Erstelle PDF...';
 
-  try {
-    const mapCanvas = document.querySelector('.ol-layer canvas');
-    if (!mapCanvas) {
-      throw new Error('Map canvas not found');
-    }
+ try {
+   // Store original background layer visibility and z-index
+   const backgroundLayer = activeBackgroundLayer.value
+   const originalZIndex = backgroundLayer?.getZIndex()
+   const originalVisibility = backgroundLayer?.getVisible()
 
-    // Create PDF
-    const pdf = new jsPDF('landscape', 'mm', format.value);
-    
-    const imgData = mapCanvas.toDataURL('image/png', 1.0);
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
+   // Ensure background layer is visible and has proper z-index for capture
+   if (backgroundLayer) {
+     backgroundLayer.setZIndex(0)  // Make sure background is at bottom
+     backgroundLayer.setVisible(true)
+   }
 
-    // Margins and spacing (in mm)
-    const sideMargin = 10;
-    const bottomMargin = 30; // 3cm bottom margin
-    const topMargin = 10;
-    const borderWidth = 0.5;
 
-    // Calculate available space for map
-    const availableWidth = pdfWidth - (2 * sideMargin);
-    const availableHeight = pdfHeight - topMargin - bottomMargin;
-    
-    // Calculate scale to fit map within margins
-    const scale = Math.min(
-      availableWidth / imgProps.width,
-      availableHeight / imgProps.height
-    );
+   // Add small delay to ensure layers are rendered
+   await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Calculate centered position for map
-    const mapWidth = imgProps.width * scale;
-    const mapHeight = imgProps.height * scale;
-    const mapX = sideMargin + (availableWidth - mapWidth) / 2;
-    const mapY = topMargin + (availableHeight - mapHeight) / 2;
+   const mapCanvas = document.querySelector('.ol-layer canvas');
+   if (!mapCanvas) {
+     throw new Error('Map canvas not found');
+   }
 
-    // Draw black border rectangle
-    pdf.setLineWidth(borderWidth);
-    pdf.setDrawColor(0);
-    pdf.rect(mapX - 1, mapY - 1, mapWidth + 2, mapHeight + 2);
 
-    // Add map image
-    pdf.addImage(
-      imgData,
-      'PNG',
-      mapX,
-      mapY,
-      mapWidth,
-      mapHeight
-    );
+   
+   // Create PDF
+   const pdf = new jsPDF('landscape', 'mm', format.value);
+   
+   const imgData = mapCanvas.toDataURL('image/png', 1.0);
+   const imgProps = pdf.getImageProperties(imgData);
+   const pdfWidth = pdf.internal.pageSize.getWidth();
+   const pdfHeight = pdf.internal.pageSize.getHeight();
 
-    // Add title in bottom margin
-    pdf.setFontSize(12);
-    pdf.setTextColor(0);
-    const titleY = pdfHeight - (bottomMargin / 2);
-    pdf.text(title.value || 'Kartenausschnitt', sideMargin, titleY);
+   // Margins and spacing (in mm)
+   const sideMargin = 10;
+   const bottomMargin = 30; // 3cm bottom margin
+   const topMargin = 10;
+   const borderWidth = 0.5;
 
-    // Calculate map scale
-    const mapResolution = props.map.getView().getResolution();
-    const mapScale = Math.round(mapResolution * 39.37 * 72);
-    const scaleText = `1:${mapScale.toLocaleString('de-DE')}`;
+   // Calculate available space for map
+   const availableWidth = pdfWidth - (2 * sideMargin);
+   const availableHeight = pdfHeight - topMargin - bottomMargin;
+   
+   // Calculate scale to fit map within margins
+   const scale = Math.min(
+     availableWidth / imgProps.width,
+     availableHeight / imgProps.height
+   );
 
-    // Format current date
-    const currentDate = new Date().toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+   // Calculate centered position for map
+   const mapWidth = imgProps.width * scale;
+   const mapHeight = imgProps.height * scale;
+   const mapX = sideMargin + (availableWidth - mapWidth) / 2;
+   const mapY = topMargin + (availableHeight - mapHeight) / 2;
 
-    // Add scale and date to bottom right
-    const infoText = `${scaleText} | ${currentDate}`;
-    const infoWidth = pdf.getStringUnitWidth(infoText) * pdf.internal.getFontSize() / pdf.internal.scaleFactor;
-    pdf.text(infoText, pdfWidth - sideMargin - infoWidth, titleY);
+   // Draw black border rectangle
+   pdf.setLineWidth(borderWidth);
+   pdf.setDrawColor(0);
+   pdf.rect(mapX - 1, mapY - 1, mapWidth + 2, mapHeight + 2);
 
-    // Add legends page if enabled
-    if (includeLegends.value) {
-      console.log('Current layers state:', layers.value);
-      
-      const visibleLayers = Object.entries(layers.value)
-        .filter(([, isVisible]) => isVisible === true)
-        .map(([name]) => {
-          console.log(`Processing layer ${name}`);
-          const url = getLegendUrl(name);
-          return {
-            name,
-            url,
-            label: getLayerLabel(name)
-          };
-        });
+   // Add map image
+   pdf.addImage(
+     imgData,
+     'PNG',
+     mapX,
+     mapY,
+     mapWidth,
+     mapHeight
+   );
 
-      console.log('Visible layers:', visibleLayers);
+   // Add title in bottom margin
+   pdf.setFontSize(12);
+   pdf.setTextColor(0);
+   const titleY = pdfHeight - (bottomMargin / 2);
+   pdf.text(title.value || 'Kartenausschnitt', sideMargin, titleY);
 
-      if (visibleLayers.length > 0) {
-        pdf.addPage();
-        
-        // Add "Legende" title
-        pdf.setFontSize(16);
-        pdf.text('Legende', sideMargin, 20);
-        
-        let currentY = 30;
-        const maxHeight = pdfHeight - 20;
+   // Calculate map scale
+   const mapResolution = props.map.getView().getResolution();
+   const mapScale = Math.round(mapResolution * 39.37 * 72);
+   const scaleText = `1:${mapScale.toLocaleString('de-DE')}`;
 
-        for (const layer of visibleLayers) {
-          try {
-            console.log(`Processing legend for ${layer.name}`);
-            
-            // Add layer name
-            pdf.setFontSize(12);
-            pdf.text(layer.label, sideMargin, currentY);
-            currentY += 8;
+   // Format current date
+   const currentDate = new Date().toLocaleDateString('de-DE', {
+     day: '2-digit',
+     month: '2-digit',
+     year: 'numeric'
+   });
 
-            // Create temporary image element to get dimensions
-            const img = new Image();
-            await new Promise((resolve, reject) => {
-              img.onload = () => {
-                console.log(`Legend image loaded for ${layer.name}, dimensions:`, img.width, 'x', img.height);
-                resolve();
-              };
-              img.onerror = (error) => {
-                console.error(`Failed to load legend for ${layer.name}:`, error);
-                reject(error);
-              };
-              img.crossOrigin = 'anonymous';
-              img.src = layer.url;
-            });
+   // Add scale and date to bottom right
+   const infoText = `${scaleText} | ${currentDate}`;
+   const infoWidth = pdf.getStringUnitWidth(infoText) * pdf.internal.getFontSize() / pdf.internal.scaleFactor;
+   pdf.text(infoText, pdfWidth - sideMargin - infoWidth, titleY);
 
-            // Convert image dimensions from px to mm (assuming 96 DPI)
-            const pxToMm = 25.4 / 96;
-            const originalWidthMm = img.width * pxToMm;
-            const originalHeightMm = img.height * pxToMm;
+   // Add legends page if enabled
+   if (includeLegends.value) {
+     console.log('Current layers state:', layers.value);
+     
+     const visibleLayers = Object.entries(layers.value)
+       .filter(([, isVisible]) => isVisible === true)
+       .map(([name]) => {
+         console.log(`Processing layer ${name}`);
+         const url = getLegendUrl(name);
+         return {
+           name,
+           url,
+           label: getLayerLabel(name)
+         };
+       });
 
-            // Maximum width allowed (accounting for margins)
-            const maxWidthMm = pdfWidth - (2 * sideMargin);
+     console.log('Visible layers:', visibleLayers);
 
-            // Calculate final dimensions
-            let finalWidth = originalWidthMm;
-            let finalHeight = originalHeightMm;
+     if (visibleLayers.length > 0) {
+       pdf.addPage();
+       
+       // Add "Legende" title
+       pdf.setFontSize(16);
+       pdf.text('Legende', sideMargin, 20);
+       
+       let currentY = 30;
+       const maxHeight = pdfHeight - 20;
 
-            // Only scale down if width exceeds maximum
-            if (originalWidthMm > maxWidthMm) {
-              const scale = maxWidthMm / originalWidthMm;
-              finalWidth = maxWidthMm;
-              finalHeight = originalHeightMm * scale;
-            }
+       for (const layer of visibleLayers) {
+         try {
+           console.log(`Processing legend for ${layer.name}`);
+           
+           // Add layer name
+           pdf.setFontSize(12);
+           pdf.text(layer.label, sideMargin, currentY);
+           currentY += 8;
 
-            // Check if we need to start a new page
-            if (currentY + finalHeight > maxHeight) {
-              pdf.addPage();
-              currentY = 20;
-            }
+           // Create temporary image element to get dimensions
+           const img = new Image();
+           await new Promise((resolve, reject) => {
+             img.onload = () => {
+               console.log(`Legend image loaded for ${layer.name}, dimensions:`, img.width, 'x', img.height);
+               resolve();
+             };
+             img.onerror = (error) => {
+               console.error(`Failed to load legend for ${layer.name}:`, error);
+               reject(error);
+             };
+             img.crossOrigin = 'anonymous';
+             img.src = layer.url;
+           });
 
-            // Add legend image
-            pdf.addImage(
-              img,
-              'PNG',
-              sideMargin,
-              currentY,
-              finalWidth,
-              finalHeight
-            );
+           // Convert image dimensions from px to mm (assuming 96 DPI)
+           const pxToMm = 25.4 / 96;
+           const originalWidthMm = img.width * pxToMm;
+           const originalHeightMm = img.height * pxToMm;
 
-            currentY += finalHeight + 15; // Add spacing after legend
-          } catch (error) {
-            console.error(`Error processing legend for ${layer.name}:`, error);
-          }
-        }
-      }
-    }
+           // Maximum width allowed (accounting for margins)
+           const maxWidthMm = pdfWidth - (2 * sideMargin);
 
-    pdf.save(`${title.value || 'map'}.pdf`);
-    message.value = 'PDF wurde erstellt';
+           // Calculate final dimensions
+           let finalWidth = originalWidthMm;
+           let finalHeight = originalHeightMm;
 
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    message.value = 'Fehler beim Erstellen der PDF';
-  } finally {
-    document.body.style.cursor = 'auto';
-    setTimeout(() => {
-      message.value = 'Konfigurieren Sie die Druckeinstellungen';
-    }, 2000);
-  }
+           // Only scale down if width exceeds maximum
+           if (originalWidthMm > maxWidthMm) {
+             const scale = maxWidthMm / originalWidthMm;
+             finalWidth = maxWidthMm;
+             finalHeight = originalHeightMm * scale;
+           }
+
+           // Check if we need to start a new page
+           if (currentY + finalHeight > maxHeight) {
+             pdf.addPage();
+             currentY = 20;
+           }
+
+           // Add legend image
+           pdf.addImage(
+             img,
+             'PNG',
+             sideMargin,
+             currentY,
+             finalWidth,
+             finalHeight
+           );
+
+           currentY += finalHeight + 15; // Add spacing after legend
+         } catch (error) {
+           console.error(`Error processing legend for ${layer.name}:`, error);
+         }
+       }
+     }
+   }
+
+   // Save PDF and restore background layer state
+   pdf.save(`${title.value || 'map'}.pdf`);
+   message.value = 'PDF wurde erstellt';
+
+   if (backgroundLayer) {
+     backgroundLayer.setZIndex(originalZIndex)
+     backgroundLayer.setVisible(originalVisibility)
+   }
+
+ } catch (error) {
+   console.error('Error generating PDF:', error);
+   message.value = 'Fehler beim Erstellen der PDF';
+ } finally {
+   document.body.style.cursor = 'auto';
+   setTimeout(() => {
+     message.value = 'Konfigurieren Sie die Druckeinstellungen';
+   }, 2000);
+ }
 };
 </script>

@@ -1,119 +1,228 @@
 <template>
-
-            <div 
-                v-cloak
-                v-show="showMainSidebar" 
-                class="fixed top-0 left-0 w-1/4 bg-white shadow-lg flex flex-col h-screen z-[100]"
-            >
-                <!-- Header -->
-            <div class="p-4 border-b border-gray-200">
-                <img 
-                src="img/headerLogo.gif" 
-                alt="Logo" 
-                class="h-16 object-contain"
-                />
-            </div>
-            
-            <!-- Navigation -->
-            <nav class="flex-1 p-4">
-                <button 
-                @click="navigateTo('/')"
-                class="w-full text-left mb-2 p-3 rounded-lg text-black hover:bg-gray-300 transition-colors"
-                :class="{ 'bg-blue-900 text-blue-200': currentPath === '/' }"
-                >
-                <div class="flex items-center">
-                    <img src="../assets/home.svg" class="w-5 h-5 mr-3" alt="Home"> Startseite
-                </div>
-                </button>
-                <button 
-                @click="navigateTo('/karte')"
-                class="w-full text-left mb-2 p-3 rounded-lg text-black hover:bg-gray-300 transition-colors"
-                :class="{ 'bg-blue-900 text-blue-200': currentPath === '/karte' }"
-                >
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                    </svg>
-                    Karte
-                </div>
-                </button>
-                <button 
-                    @click="authStore.isAuthenticated ? navigateTo('/baumarteneignungstabelle') : null"
-                    class="w-full text-left p-3 rounded-lg transition-colors"
-                    :class="[
-                        currentPath === '/baumarteneignungstabelle' ? 'bg-gray-300 text-black-200' : '',
-                        authStore.isAuthenticated 
-                        ? 'text-black hover:bg-gray-300' 
-                        : 'text-gray-400 cursor-not-allowed'
-                    ]"
-                    >
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        <span>Baumarten-Eignungstabelle</span>
-                        <!-- Optional: Add a lock icon for unauthenticated users -->
-                        <svg 
-                        v-if="!authStore.isAuthenticated" 
-                        class="w-4 h-4 ml-2" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                        >
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                    </div>
-                    </button>
-
-                <button 
-                @click="navigateTo('/login')"
-                class="w-full text-left p-3 rounded-lg text-black hover:bg-gray-300 transition-colors"
-                :class="{ 'bg-gray-300 text-black-200': currentPath === '/login' }"
-                >
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                    </svg>
-                    {{ authStore.isAuthenticated ? 'Abmelden' : 'Anmelden' }}
-                </div>
-                </button>
-
-            </nav>
-        
-            <!-- Footer -->
-            <div class="p-4 border-t border-black">
-                <p class="text-center text-sm text-gray-600">
-                © powered by csgis
-                </p>
-            </div>
-            </div>
-  </template>
-  <script setup>
-    import { computed } from 'vue'
-    import { useRoute, useRouter } from 'vue-router'
-    import { useUIStore } from '../stores/uiStore'
-    import { useAuthStore } from '../stores/authStore'
+    <div 
+      :class="`bg-white shadow-lg flex flex-col h-screen transition-all duration-300 ${
+        isExpanded ? 'w-1/4' : 'w-12'
+      }`"
+      style="z-index: 40;"
+    >
+    <!-- Toggle Button -->
+    <button 
+    v-if="showToggleButton"
+    @click="toggleSidebar"
+    :class="`absolute top-1/2 -translate-y-1/2 w-6 h-12 bg-white shadow-lg flex items-center justify-center border border-l-0 border-gray-400 rounded-r-lg z-[100] ${
+        isExpanded ? 'left-[25%]' : 'left-12' 
+    }`"
+    >
+    <svg 
+        class="w-4 h-4 text-gray-400 transform transition-transform duration-300"
+        :class="isExpanded ? 'rotate-0' : 'rotate-180'"
+        fill="none" 
+        stroke="currentColor" 
+        viewBox="0 0 24 24"
+    >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+    </button>
   
-    const uiStore = useUIStore()
-    const route = useRoute()
-    const router = useRouter()
-    const authStore = useAuthStore()
-    // Get the sidebar visibility from the store
-    const showMainSidebar = computed(() => uiStore.getMainSidebarVisibility)
-    
-    // Computed properties for route-based conditions
-    const currentPath = computed(() => route.path)
-    
-    // Navigation function
-    const navigateTo = (path) => {
-    if (path === '/login' && authStore.isAuthenticated) {
-        authStore.logout()
-        router.push('/')
+      <!-- Header -->
+      <div 
+        :class="`border-b border-gray-200 transition-all duration-300 ${
+          isExpanded ? 'p-4' : 'p-2'
+        }`"
+      >
+        <img 
+          src="img/headerLogo.gif" 
+          alt="Logo" 
+          :class="`object-contain transition-all duration-300 ${
+            isExpanded ? 'h-16' : 'h-8'
+          }`"
+        />
+      </div>
+      
+      <!-- Navigation -->
+      <nav 
+        :class="`flex-1 transition-all duration-300 ${
+          isExpanded ? 'p-4' : 'p-2'
+        }`"
+      >
+
+
+      <TooltipButton
+    v-for="(item, index) in navigationItems" 
+    :key="index"
+    :tooltip="!isExpanded ? (typeof item.label === 'function' ? item.label() : item.label) : ''"
+    @click="!item.requiresAuth || authStore.isAuthenticated ? handleNavigation(item) : null"
+    :buttonClass="[
+        'w-full text-left mb-2 rounded-lg text-black hover:bg-gray-300 transition-colors relative',
+        currentPath === item.path ? 'bg-blue-900 text-blue-200' : '',
+        isExpanded ? 'p-3' : 'p-2 flex justify-center',
+        item.requiresAuth && !authStore.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
+    ]"
+    position="left"
+    tooltipClass="z-[1000]"
+    :disabled="item.requiresAuth && !authStore.isAuthenticated"
+>
+    <div 
+        :class="[
+            'flex items-center',
+            !isExpanded && 'justify-center'
+        ]"
+    >
+    <div class="relative flex items-center">
+    <!-- Render the item's icon only if the user is authenticated -->
+    <component 
+        v-if="authStore.isAuthenticated || !item.requiresAuth"
+        :is="item.icon" 
+        :class="[
+            'w-5 h-5',
+            isExpanded ? 'mr-3' : ''
+        ]"
+    />
+    <!-- Conditional rendering for the lock icon -->
+    <svg 
+        v-if="item.requiresAuth && !authStore.isAuthenticated && item.showLock"
+        :class="[
+            'w-5 h-5',
+            isExpanded ? 'mr-3' : ''
+        ]"        fill="none" 
+        stroke="currentColor" 
+        viewBox="0 0 24 24"
+    >
+        <path 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            stroke-width="2" 
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+        />
+    </svg>
+</div>
+
+        <!-- Render the label when expanded -->
+        <span 
+          v-if="isExpanded"
+          class="transition-opacity duration-300"
+        >
+          {{ typeof item.label === 'function' ? item.label() : item.label }}
+        </span>
+    </div>
+</TooltipButton>
+
+
+      </nav>
+  
+      <!-- Footer -->
+      <div 
+        :class="`border-t border-black transition-all duration-300 ${
+          isExpanded ? 'p-4' : 'p-2 text-center'
+        }`"
+      >
+        <p class="text-sm text-gray-600">
+          {{ isExpanded ? '© powered by csgis' : '©' }}
+        </p>
+      </div>
+    </div>
+  </template>
+  
+  <script setup>
+  import { computed } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useUIStore } from '../stores/uiStore'
+  import { useAuthStore } from '../stores/authStore'
+  import { 
+    HomeIcon, MapIcon, DocumentIcon, UserIcon 
+  } from '@heroicons/vue/24/outline'
+  import TooltipButton from './TooltipButton.vue'
+  
+  const router = useRouter()
+  const route = useRoute()
+  const uiStore = useUIStore()
+  const authStore = useAuthStore()
+
+  // Compute initial expanded state based on route
+    const isExpanded = computed(() => {
+    if (isMapPage.value) {
+        return false;  // Always collapsed on map page
+    }
+    return uiStore.mainSidebarExpanded;  // Use store state for other pages
+    })
+  
+    const navigationItems = [
+    {
+        label: 'Startseite',
+        path: '/',
+        icon: HomeIcon,
+        requiresAuth: false
+    },
+    {
+        label: 'Karte',
+        path: '/karte',
+        icon: MapIcon,
+        requiresAuth: false
+    },
+    {
+        label: 'Baumarten-Eignungstabelle',
+        path: '/baumarteneignungstabelle',
+        icon: DocumentIcon,
+        requiresAuth: true,
+        showLock: true // Show lock for unauthenticated users
+    },
+    {
+        label: () => authStore.isAuthenticated ? 'Abmelden' : 'Anmelden',
+        path: '/login',
+        icon: UserIcon,
+        requiresAuth: false
+    }
+];
+
+  
+  const currentPath = computed(() => route.path)
+  
+  const handleNavigation = (item) => {
+  console.log('Navigation clicked:', item.path, 'Auth required:', item.requiresAuth, 'Is authenticated:', authStore.isAuthenticated)
+
+  // If this is the login button and user is authenticated, handle logout
+  if (item.path === '/login' && authStore.isAuthenticated) {
+    console.log('Handling logout')
+    authStore.logout()
+    router.push('/')
+    return
+  }
+  
+  // If auth is required but user isn't authenticated, don't do anything
+  if (item.requiresAuth && !authStore.isAuthenticated) {
+    console.log('Auth required but user not authenticated')
+    return
+  }
+
+  // For all other cases, immediately route
+  console.log('Routing to:', item.path)
+  router.push(item.path).then(() => {
+    // Handle sidebar state after route change
+    if (item.path === '/karte') {
+      uiStore.showMapSidebar()
+      uiStore.mainSidebarExpanded = false
     } else {
-        router.push(path)
-        if (path === '/karte') {
-        uiStore.hideMainSidebar()
-        }
+      uiStore.hideMapSidebar()
+      uiStore.mainSidebarExpanded = true
     }
+  })
+}
+  
+    // Update these computed properties
+    const isMapPage = computed(() => {
+    return route.path === '/karte';
+    });
+
+    const showToggleButton = computed(() => {
+    const shouldShow = route.path !== '/karte';
+    return shouldShow;
+    });
+
+    // Also update the toggleSidebar function to add logging
+    const toggleSidebar = () => {
+    console.log('Toggle clicked, current path:', route.path);  // Debug log
+    if (route.path !== '/karte') {
+        uiStore.toggleMainSidebar();
     }
+    };
   </script>

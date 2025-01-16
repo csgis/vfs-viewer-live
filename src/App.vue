@@ -22,5 +22,5 @@ import MainSidebar from './components/MainSidebar.vue'
 import { useUIStore } from './stores/uiStore'
 
 const uiStore = useUIStore();
-uiStore.setShowMainSidebar();
+uiStore.hideMapSidebar();
 </script>

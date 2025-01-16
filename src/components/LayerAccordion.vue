@@ -52,107 +52,94 @@
             class="space-y-2"
             @change="handleLayerOrderChange"
           >
-            <template #item="{ element: layerName }">
-              <div 
-                v-if="!['trinkwasser', 'landschaftsschutz', 'naturschutz'].includes(layerName)"
-                class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors"
-                :class="layers[layerName] == true ? 'bg-blue-100 hover:bg-blue-100' : 'bg-white'"
-              >
 
+          <template #item="{ element: layerName }">
+  <div 
+    v-if="!['trinkwasser', 'landschaftsschutz', 'naturschutz'].includes(layerName)"
+    class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors"
+    :class="layers[layerName] == true ? 'bg-blue-100 hover:bg-blue-100' : 'bg-white'"
+  >
+    <div class="flex flex-col space-y-2">
+      <!-- Main Layer Controls -->
+      <div class="flex items-center">
+        <!-- Drag Handle -->
+        <div class="drag-handle cursor-grab p-1">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+          </svg>
+        </div>
+        
+        <!-- Checkbox and Label -->
+        <div class="flex-1 flex items-center min-w-0">
+          <input 
+            type="checkbox" 
+            :checked="layers[layerName]"
+            @change="toggleLayer(layerName)"
+            class="mr-2"
+            :disabled="!isLayerAvailable(layerName)"
+          >
+          <span 
+            class="flex-1 truncate mr-2" 
+            :class="{ 'text-gray-400': !isLayerAvailable(layerName) }"
+          >
+            {{ getLayerLabel(layerName) }}
+            <span v-if="!isLayerAvailable(layerName)" class="text-xs text-gray-400 ml-1">
+              (Login erforderlich)
+            </span>
+          </span>
+        </div>
+        
+        <!-- Info Icon -->
+        <div>
+          <svg 
+            class="w-4 h-4 text-gray-500 hover:text-gray-700 cursor-help"
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            @mouseenter="updateTooltipPosition($event, layerName)"
+            @mouseleave="hoveredLayer = null"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      </div>
+      
+      <!-- Controls when layer is active -->
+      <div v-if="layers[layerName]" class="pl-7">
+        <!-- Opacity Slider -->
+        <div class="flex items-center space-x-2 mb-2">
+          <span class="text-xs text-gray-500 w-8">0%</span>
+          <input 
+            type="range" 
+            min="0" 
+            max="100" 
+            v-model="layerOpacities[layerName]" 
+            @input="updateLayerOpacity(layerName)"
+            class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          >
+          <span class="text-xs text-gray-500 w-8">{{ layerOpacities[layerName] }}%</span>
+        </div>
 
-                <div class="flex flex-col space-y-2">
-                  <!-- Main Layer Controls -->
-                  <div class="flex items-center">
-                    <!-- Drag Handle -->
-                    <div class="drag-handle cursor-grab p-1">
-                      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
-                      </svg>
-                    </div>
-                    
-                    <!-- Checkbox and Label -->
-                    <div class="flex-1 flex items-center min-w-0">
-                      <input 
-                        type="checkbox" 
-                        :checked="layers[layerName]"
-                        @change="toggleLayer(layerName)"
-                        class="mr-2"
-                        :disabled="!isLayerAvailable(layerName)"
-                      >
-                      <span 
-                        class="flex-1 truncate mr-2" 
-                        :class="{ 'text-gray-400': !isLayerAvailable(layerName) }"
-                      >
-                        {{ getLayerLabel(layerName) }}
-                        <span v-if="!isLayerAvailable(layerName)" class="text-xs text-gray-400 ml-1">
-                          (Login erforderlich)
-                        </span>
-                      </span>
-                    </div>
+        <!-- Legend Display -->
+        <div v-if="legends[layerName]">
+          <div class="relative">
+            <div :class="{'max-h-32 overflow-hidden': isLegendLarge(layerName) && !expandedLegends[layerName]}">
+              <img 
+                :src="legends[layerName]" 
+                :alt="'Legend for ' + getLayerLabel(layerName)"
+                class="max-w-full cursor-pointer"
+                @click="openLegendModal(layerName)"
+                @load="checkLegendSize($event, layerName)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+          
 
-                    <!-- Info Icon -->
-                    <div>
-                      <svg 
-                        class="w-4 h-4 text-gray-500 hover:text-gray-700 cursor-help"
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                        @mouseenter="updateTooltipPosition($event, layerName)"
-                        @mouseleave="hoveredLayer = null"
-                      >
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                  </div>
-
-                  <!-- Controls when layer is active -->
-                  <div v-if="layers[layerName]" class="pl-7">
-                    <!-- Opacity Slider -->
-                    <div class="flex items-center space-x-2 mb-2">
-                      <span class="text-xs text-gray-500 w-8">0%</span>
-                      <input 
-                        type="range" 
-                        min="0" 
-                        max="100" 
-                        v-model="layerOpacities[layerName]" 
-                        @input="updateLayerOpacity(layerName)"
-                        class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                      >
-                      <span class="text-xs text-gray-500 w-8">{{ layerOpacities[layerName] }}%</span>
-                    </div>
-
-                    <!-- Legend Display -->
-                    <div v-if="legends[layerName]">
-                      <div class="relative">
-                        <div :class="{'max-h-32 overflow-hidden': isLegendLarge(layerName) && !expandedLegends[layerName]}">
-                          <img 
-                            :src="legends[layerName]" 
-                            :alt="'Legend for ' + getLayerLabel(layerName)"
-                            class="max-w-full cursor-pointer"
-                            @click="openLegendModal(layerName)"
-                            @load="checkLegendSize($event, layerName)"
-                          />
-                        </div>
-                        <div class="flex space-x-2 mt-1" v-if="isLegendLarge(layerName)">
-                          <button 
-                            @click="toggleLegend(layerName)"
-                            class="text-sm text-blue-400 hover:text-blue-300"
-                          >
-                            {{ expandedLegends[layerName] ? 'Zeige weniger' : 'Zeige mehr' }}
-                          </button>
-                          <button 
-                            @click="openLegendModal(layerName)"
-                            class="text-sm text-blue-400 hover:text-blue-300"
-                          >
-                            Vergrößern
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </template>
           </draggable>
         </div>
       </div>
@@ -409,7 +396,7 @@ const layerInfo = {
   trinkwasser: "Informationen über Trinkwasserschutzgebiete...",
   landschaftsschutz: "Informationen über Landschaftsschutzgebiete...",
   naturschutz: "Informationen über Naturschutzgebiete...",
-  // Add more layer info texts as needed
+  standorte: "Standorte Layer - Login erforderlich für Zugriff",
 }
 
 // Methods

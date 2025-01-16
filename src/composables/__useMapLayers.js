@@ -86,13 +86,25 @@ export function useMapLayers() {
     kartiergebiete: 'vfs:kartiergebiete',
     trinkwasser: 'schutzgebiete:twsg',
     landschaftsschutz: 'schutzgebiete:landschafts',
-    naturschutz: 'schutzgebiete:natur'
+    naturschutz: 'schutzgebiete:natur',
+    standorte: 'vfs:standorte'  // New authenticated layer
   }
 
+  // List of layers that require authentication
+  const authenticatedLayers = ['standorte']
+
   const createWMSLayer = (layerName) => {
+    // Determine if this layer needs authentication
+    const needsAuth = authenticatedLayers.includes(layerName)
+    
+    // Use proxy URL for authenticated layers, direct URL for public layers
+    const url = needsAuth 
+      ? '/api/geoserver/wms'
+      : 'https://geoserver-vfs.csgis.de/geoserver/wms'
+
     return new ImageLayer({
       source: new ImageWMS({
-        url: 'https://geoserver-vfs.csgis.de/geoserver/wms',
+        url: url,
         params: {
           'LAYERS': layerSources[layerName],
           'FORMAT': 'image/png',
@@ -176,6 +188,7 @@ export function useMapLayers() {
     initializeBackground,
     cleanup,
     toggleWMSLayer,
-    layerSources
+    layerSources,
+    authenticatedLayers
   }
 }

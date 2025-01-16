@@ -57,7 +57,7 @@
         :disabled="currentIndex === 0"
         class="px-4 py-2 text-blue-500 hover:text-blue-700 disabled:opacity-50 disabled:text-gray-400"
       >
-        weiter
+        zurück
       </button>
       
       <span class="font-medium text-gray-700">
@@ -69,7 +69,7 @@
         :disabled="currentIndex === featureInfo.length - 1"
         class="px-4 py-2 text-blue-500 hover:text-blue-700 disabled:opacity-50 disabled:text-gray-400"
       >
-        zurück
+        weiter
       </button>
     </div>
   </div>
@@ -84,11 +84,14 @@ import Point from 'ol/geom/Point';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Style, Circle as CircleStyle, Fill, Stroke } from 'ol/style';
 import { useUIStore } from '../stores/uiStore';
+import { useLayerStore } from '../stores/layerStore';
 import { 
   Vector as VectorSource,
   ImageWMS, 
   TileWMS 
 } from 'ol/source';
+import { useAuthStore } from '../stores/authStore'
+
 
 const props = defineProps({
   map: Object
@@ -102,6 +105,7 @@ const active = ref(true);
 const message = ref('Klicken Sie auf die Karte, um Informationen anzuzeigen');
 const isLoading = ref(false);
 const lastClickCoordinate = ref(null);
+const authStore = useAuthStore()
 
 // Marker related state
 let markerSource;
@@ -174,7 +178,7 @@ const removeMarker = () => {
   }
 };
 
-const layerNamesToQuery = ['vfs:kartiergebiete', '0'];
+const layerNamesToQuery = ['vfs:kartiergebiete', 'vfs:standorte', '0'];
 
 const currentFeature = computed(() => featureInfo.value[currentIndex.value]);
 
@@ -260,6 +264,7 @@ const makeGetFeatureInfoRequest = async (evt) => {
       const layerVersion = source.getParams()?.VERSION || '1.3.0';
 
       if (layerNamesToQuery.includes(layersParam)) {
+
         queryPromises.push(
           queryLayerForFeatureInfo(layer, coordinate, projection, url, layerVersion, layersParam)
         );
@@ -287,6 +292,9 @@ const makeGetFeatureInfoRequest = async (evt) => {
 };
 
 const queryLayerForFeatureInfo = async (layer, coordinate, projection, layerUrl, layerVersion, layersParam) => {
+
+  const layerStore = useLayerStore();
+
   try {
     layersQueried.push({ layerUrl, layersParam, layerName: layersParam });
 
@@ -314,11 +322,22 @@ const queryLayerForFeatureInfo = async (layer, coordinate, projection, layerUrl,
       'BBOX': props.map.getView().calculateExtent().join(',')
     };
 
+
+
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.append(key, value);
     });
 
-    const response = await fetch(url);
+    // Check if the layer is protected using the layer store getter
+    const isProtected = layerStore.isLayerProtected(layersParam) && layerStore.layerNeedsBearer(layersParam) ;
+
+    var headers = {}
+    if (isProtected) {
+      headers = authStore.authHeaders;
+    }
+
+    const response = await fetch(url, {headers});
+
     const data = await response.json();
 
     if (data.features?.length > 0) {

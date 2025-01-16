@@ -41,3 +41,19 @@ html, body {
 *:hover::-webkit-scrollbar-thumb:hover {
   background-color: rgba(0, 0, 0, 0.5);
 }
+
+.tooltip {
+  z-index: 100 !important;
+}
+
+.main-sidebar {
+  z-index: 40;
+}
+
+.map-sidebar {
+  z-index: 50;
+}
+
+.ol-control {
+  z-index: 30;
+}
