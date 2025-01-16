@@ -31,10 +31,10 @@
         }`"
       >
         <img 
-          src="img/headerLogo.gif" 
+          :src="isExpanded ? 'img/vfs-logo-solo-lg.png' : 'img/vfs-logo-solo.png'"
           alt="Logo" 
           :class="`object-contain transition-all duration-300 ${
-            isExpanded ? 'h-16' : 'h-8'
+            isExpanded ? 'h-16 mx-2' : 'h-8 mx-1 mt-5'
           }`"
         />
       </div>
@@ -53,7 +53,7 @@
     :tooltip="!isExpanded ? (typeof item.label === 'function' ? item.label() : item.label) : ''"
     @click="!item.requiresAuth || authStore.isAuthenticated ? handleNavigation(item) : null"
     :buttonClass="[
-        'w-full text-left mb-2 rounded-lg text-black hover:bg-gray-300 transition-colors relative',
+        'w-full text-left mb-2 rounded-lg text-black hover:bg-gray-300 hover:text-black transition-colors relative',
         currentPath === item.path ? 'bg-blue-900 text-blue-200' : '',
         isExpanded ? 'p-3' : 'p-2 flex justify-center',
         item.requiresAuth && !authStore.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
@@ -113,11 +113,20 @@
       <!-- Footer -->
       <div 
         :class="`border-t border-black transition-all duration-300 ${
-          isExpanded ? 'p-4' : 'p-2 text-center'
+          isExpanded ? 'p-4' : 'hidden'
         }`"
       >
-        <p class="text-sm text-gray-600">
-          {{ isExpanded ? '© powered by csgis' : '©' }}
+      <p class="text-sm text-gray-600">
+        {{ isExpanded ? '© powered by ' : '' }}
+        <a 
+            v-if="isExpanded" 
+            href="https://csgis.de" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            class="text-blue-500 hover:underline"
+        >
+            csgis.de
+        </a>
         </p>
       </div>
     </div>
@@ -164,7 +173,7 @@
         path: '/baumarteneignungstabelle',
         icon: DocumentIcon,
         requiresAuth: true,
-        showLock: true // Show lock for unauthenticated users
+        showLock: true
     },
     {
         label: () => authStore.isAuthenticated ? 'Abmelden' : 'Anmelden',
@@ -201,6 +210,8 @@
     if (item.path === '/karte') {
       uiStore.showMapSidebar()
       uiStore.mainSidebarExpanded = false
+    } else if (item.path === '/baumarteneignungstabelle'){
+        uiStore.mainSidebarExpanded = false
     } else {
       uiStore.hideMapSidebar()
       uiStore.mainSidebarExpanded = true

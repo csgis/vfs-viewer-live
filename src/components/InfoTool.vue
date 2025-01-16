@@ -178,7 +178,7 @@ const removeMarker = () => {
   }
 };
 
-const layerNamesToQuery = ['vfs:kartiergebiete', 'vfs:standorte', '0'];
+const layerNamesToQuery = ['vfs:kartiergebiete', 'vfs:standorte', '0', 'schutzgebiete:twsg', 'schutzgebiete:landschafts', 'schutzgebiete:natur'];
 
 const currentFeature = computed(() => featureInfo.value[currentIndex.value]);
 
@@ -263,6 +263,7 @@ const makeGetFeatureInfoRequest = async (evt) => {
 
       const layerVersion = source.getParams()?.VERSION || '1.3.0';
 
+      console.log(layerNamesToQuery, layersParam)
       if (layerNamesToQuery.includes(layersParam)) {
 
         queryPromises.push(

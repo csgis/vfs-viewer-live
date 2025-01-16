@@ -13,11 +13,12 @@ import { useAuthStore } from '../stores/authStore'
 import { useLayerStore } from '../stores/layerStore'
 import { useUIStore } from '../stores/uiStore'
 
-export function useLayerManagement(map) {
+export function useLayerManagement(providedMap = null) {
   const layerStore = useLayerStore()
   const uiStore = useUIStore()
   const authStore = useAuthStore()
-
+  const map = ref(providedMap)
+  
   const { layers, legends, layerOrder, layerOpacities } = storeToRefs(layerStore)
   
   const selectedBackground = ref('luftbilder')
@@ -68,9 +69,11 @@ export function useLayerManagement(map) {
   }
 
   const cleanupLayer = (layerName) => {
+    if (!map.value) return
+
     const layer = wmsLayers.get(layerName)
     if (layer) {
-      map.removeLayer(layer)
+      map.value.removeLayer(layer)
       layer.dispose()
       wmsLayers.delete(layerName)
     }
@@ -181,7 +184,7 @@ export function useLayerManagement(map) {
           visible: false
         })
         
-        await applyMapboxStyle(map, vectorStyles[type])
+        await applyMapboxStyle(map.value, vectorStyles[type])
         return dummyLayer
       } catch (error) {
         console.error('Error creating vector tile layer:', error)
@@ -304,103 +307,109 @@ export function useLayerManagement(map) {
   }
 
 
-const toggleLayer = (layerName) => {
-  if (!map) return
+  const toggleLayer = (layerName) => {
+    if (!map.value) {
+      console.warn(`Cannot toggle layer ${layerName}: no map available`)
+      return
+    }
 
-  console.log(`Toggle called for ${layerName}`)
+    console.log(`Toggle called for ${layerName}`)
 
-  if (layerStore.isLayerProtected(layerName) && !authStore.isAuthenticated) {
-    console.log('Cannot toggle protected layer - user not authenticated')
-    return
-  }
+    if (layerStore.isLayerProtected(layerName) && !authStore.isAuthenticated) {
+      console.log('Cannot toggle protected layer - user not authenticated')
+      return
+    }
 
-  const currentlyActive = layers.value[layerName]
-  
-  // Update store first
-  layerStore.setLayerVisibility(layerName, !currentlyActive)
-  
-  // Check all layers on the map to ensure no duplicates
-  const mapLayers = map.getLayers().getArray()
-  console.log('All map layers:', mapLayers.length)
-  
-  mapLayers.forEach(layer => {
-    const source = layer.getSource()
-    if (source instanceof ImageWMS) {
-      const params = source.getParams()
-      console.log('Layer params:', params)
-      if (params.LAYERS === layerSources[layerName]) {
-        console.log('Found matching layer, removing it')
-        map.removeLayer(layer)
+    const currentlyActive = layers.value[layerName]
+    
+    // Update store first
+    layerStore.setLayerVisibility(layerName, !currentlyActive)
+    
+    // Check all layers on the map to ensure no duplicates
+    const mapLayers = map.value.getLayers().getArray()
+    console.log('All map layers:', mapLayers.length)
+    
+    mapLayers.forEach(layer => {
+      const source = layer.getSource()
+      if (source instanceof ImageWMS) {
+        const params = source.getParams()
+        console.log('Layer params:', params)
+        if (params.LAYERS === layerSources[layerName]) {
+          console.log('Found matching layer, removing it')
+          map.value.removeLayer(layer)
+        }
       }
-    }
-  })
+    })
 
-  // If we're turning the layer on, create a new one
-  if (!currentlyActive) {
-    console.log('Creating new layer')
-    const layer = createWMSLayer(layerName)
-    wmsLayers.set(layerName, layer)
-    map.addLayer(layer)
-    loadLegend(layerName)
-  } else {
-    // If we're turning it off, clean up references
-    wmsLayers.delete(layerName)
-    layerStore.setLegendUrl(layerName, null)
-  }
-}
-
-const initializeLayers = () => {
-  if (!map || initialized.value) {
-    console.warn('Skipping initialization - already initialized or no map')
-    return
-  }
-  
-  console.warn('Initializing layers...')
-  
-  // Preserve existing layers instead of removing them
-  const existingLayers = map.getLayers().getArray()
-  
-  // Identify and preserve background layer
-  const backgroundLayer = existingLayers.find(layer => 
-    layer instanceof TileLayer && 
-    (layer.get('type') === 'background' || layer.get('name') === 'background')
-  )
-
-  // Remove only WMS layers that are not the background layer
-  existingLayers.forEach(layer => {
-    if (layer.getSource() instanceof ImageWMS && layer !== backgroundLayer) {
-      console.warn('Removing existing WMS layer')
-      map.removeLayer(layer)
-    }
-  })
-  
-  wmsLayers.clear()
-
-  // Add active layers from store
-  Object.entries(layers.value).forEach(([layerName, isActive]) => {
-    console.warn(`Checking layer ${layerName}, active: ${isActive}`)
-    if (isActive) {
-      console.warn(`Creating layer ${layerName}`)
+    // If we're turning the layer on, create a new one
+    if (!currentlyActive) {
+      console.log('Creating new layer')
       const layer = createWMSLayer(layerName)
       wmsLayers.set(layerName, layer)
-      
-      // Only add if not already on the map
-      if (!existingLayers.includes(layer)) {
-        map.addLayer(layer)
-      }
-      
+      map.value.addLayer(layer)
       loadLegend(layerName)
+    } else {
+      // If we're turning it off, clean up references
+      wmsLayers.delete(layerName)
+      layerStore.setLegendUrl(layerName, null)
     }
-  })
-
-  // Ensure background layer is added if not already present
-  if (backgroundLayer && !existingLayers.includes(backgroundLayer)) {
-    map.addLayer(backgroundLayer)
   }
 
-  initialized.value = true
-  console.warn('Initialization complete. Current layers:', [...wmsLayers.keys()])
-}
+  const initializeLayers = () => {
+    // Only proceed if map is provided and not already initialized
+    if (!map.value || initialized.value) {
+      console.warn('Skipping initialization - no map or already initialized')
+      return
+    }
+    
+    console.warn('Initializing layers...')
+    
+    // Preserve existing layers instead of removing them
+    const existingLayers = map.value.getLayers().getArray()
+    
+    // Identify and preserve background layer
+    const backgroundLayer = existingLayers.find(layer => 
+      layer instanceof TileLayer && 
+      (layer.get('type') === 'background' || layer.get('name') === 'background')
+    )
+
+    // Remove only WMS layers that are not the background layer
+    existingLayers.forEach(layer => {
+      if (layer.getSource() instanceof ImageWMS && layer !== backgroundLayer) {
+        console.warn('Removing existing WMS layer')
+        map.value.removeLayer(layer)
+      }
+    })
+    
+    wmsLayers.clear()
+
+    // Add active layers from store
+    Object.entries(layers.value).forEach(([layerName, isActive]) => {
+      console.warn(`Checking layer ${layerName}, active: ${isActive}`)
+      if (isActive) {
+        console.warn(`Creating layer ${layerName}`)
+        const layer = createWMSLayer(layerName)
+        wmsLayers.set(layerName, layer)
+        
+        // Only add if not already on the map
+        if (!existingLayers.includes(layer)) {
+          map.value.addLayer(layer)
+        }
+        
+        loadLegend(layerName)
+      }
+    })
+
+    // Ensure background layer is added if not already present
+    if (backgroundLayer && !existingLayers.includes(backgroundLayer)) {
+      map.value.addLayer(backgroundLayer)
+    }
+
+    initialized.value = true
+    console.warn('Initialization complete. Current layers:', [...wmsLayers.keys()])
+  }
+
+
 
   const isLayerAvailable = (layerName) => {
     return !layerStore.isLayerProtected(layerName) || authStore.isAuthenticated
@@ -433,17 +442,17 @@ const initializeLayers = () => {
   }
 
   const unloadAllBackgroundLayers = () => {
-    if (!map) {
+    if (!map.value) {
       console.warn('No map available to unload background layers')
       return
     }
     
-    const layers = map.getLayers()
+    const layers = map.value.getLayers()
     const layersArray = layers.getArray()
     for (let i = layersArray.length - 1; i >= 0; i--) {
       const layer = layersArray[i]
       if (layer instanceof TileLayer) {
-        map.removeLayer(layer)
+        map.value.removeLayer(layer)
       }
     }
   
@@ -463,7 +472,7 @@ const initializeLayers = () => {
         if (layer) {
           backgroundLayers.value[selectedBackground.value] = layer
           activeBackgroundLayer.value = layer
-          map.addLayer(layer)
+          map.value.addLayer(layer)
         }
       }
     } catch (error) {
@@ -477,11 +486,11 @@ const initializeLayers = () => {
     initialized.value = false
     
     // Only try to remove layers if map exists
-    if (map) {
+    if (map.value) {
       // Remove all layers from the map
-      const mapLayers = map.getLayers().getArray()
+      const mapLayers = map.value.getLayers().getArray()
       mapLayers.forEach(layer => {
-        map.removeLayer(layer)
+        map.value.removeLayer(layer)
       })
       
       // Clean up WMS layers
@@ -499,11 +508,6 @@ const initializeLayers = () => {
     }
   }
 
-  watch(() => map, (newMap) => {
-    if (newMap && !initialized.value) {
-      initializeLayers()
-    }
-  }, { immediate: false })
 
   watch(
     () => authStore.isAuthenticated,
@@ -545,6 +549,7 @@ const initializeLayers = () => {
     vectorStyles,
     isLayerAvailable,
     cleanup,
-    initializeLayers
+    initializeLayers,
+    map
   }
 }

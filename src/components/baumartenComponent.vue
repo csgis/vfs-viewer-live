@@ -274,7 +274,7 @@ const isCsvExporting = ref(false)
 const treeColumns = [
   'FICHTE', 'TANNE', 'ELA', 'DOUGLASIE', 'KIEFER', 'BUCHE', 
   'BERGAHORN', 'ESCHE', 'WINTERLINDE', 'SCHWARZERLE', 
-  'TRAUBENEICHE', 'STIELEICHE', 'EICHE', 'KIRSCHE'
+  'EICHE', 'KIRSCHE', 'TRAUBENEICHE', 'STIELEICHE', 
 ]
 
 const getTooltipText = (column, value) => {

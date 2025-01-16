@@ -89,11 +89,8 @@ const format = ref('a4');
 const includeLegends = ref(true);
 
 // Get layer management functions and state
-const { 
-    getLayerLabel, 
-    getLegendUrl, 
-    activeBackgroundLayer 
-  } = useLayerManagement(props.map)
+const layerManagement = useLayerManagement();
+const { getLayerLabel, getLegendUrl, activeBackgroundLayer } = layerManagement;
 const layerStore = useLayerStore();
 const uiStore = useUIStore();
 const { layers } = storeToRefs(layerStore);
