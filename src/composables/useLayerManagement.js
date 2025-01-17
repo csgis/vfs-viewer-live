@@ -240,7 +240,7 @@ export function useLayerManagement(providedMap = null) {
       return 'https://geodaten.bayern.de/wms/legend/legende_alkis_parzellarkarte_umr.png'
     }
   
-    const needsAuth = layerStore.isLayerProtected(layerName) && layerStore.layerNeedsBearer(layerName) 
+    const needsAuth = layerStore.layerNeedsBearer(layerName) 
     
     const wmsConfig = {
       default: {
@@ -275,7 +275,7 @@ export function useLayerManagement(providedMap = null) {
   
     try {
       // If it's a protected layer and we need authentication
-      if (layerStore.isLayerProtected(layerName) && authStore.isAuthenticated) {
+      if (layerStore.layerNeedsBearer(layerName) && authStore.isAuthenticated) {
         console.log('Fetching protected legend for', layerName)
         
         // Use fetchWithAuth from authStore for protected layers
