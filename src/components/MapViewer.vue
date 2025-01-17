@@ -35,15 +35,6 @@
         </svg>
       </button>
 
-      <!-- Header -->
-      <div class="p-4 border-b border-slate-600" :class="{ 'hidden': !uiStore.mapSidebarExpanded }">
-        <img 
-          src="img/headerLogo.gif" 
-          alt="Logo" 
-          class="h-16 object-contain"
-        />
-      </div>
-
       <!-- Content -->
       <div class="flex-1 overflow-y-auto" :class="{ 'hidden': !uiStore.mapSidebarExpanded }">
         <div class="p-4 text-black">

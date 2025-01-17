@@ -9,23 +9,23 @@
       <div class="absolute inset-0 bg-green-900/60"></div>
     </div>
     
-    <div class="container mx-auto px-6 py-12 relative z-10 mt-5">
-      <div class="max-w-6xl mx-auto space-y-12">
+    <div class="container mx-auto px-12 py-12 relative z-10 mt-5 ">
+      <div class="max-w-6xl mx-auto space-y-4">
         <!-- Header -->
         <div class="text-center text-white">
-          <h1 class="text-4xl md:text-5xl font-semibold mb-4 tracking-tight">
-            Ihr Wald im Überblick
+          <h1 class="text-4xl md:text-5xl font-semibold mb-4">
+           Wald im Überblick
           </h1>
-          <p class="text-xl md:text-2xl max-w-3xl mx-auto font-light text-gray-100">
-            Das Webportal des VfS für Waldbesitzer
+          <p class="text-xl md:text-2xl max-w-3xl mx-auto font-light text-gray-100 mb-12">
+            Das Webportal des VfS für Waldbesitzer 
           </p>
         </div>
 
         <!-- Main Content Grid -->
-        <div class="grid md:grid-cols-3 gap-8">
+        <div class="grid md:grid-cols-3 gap-4">
           <!-- Methodology Section -->
-          <div class="md:col-span-2 bg-white/10 border border-white/20 rounded-xl p-8 text-white">
-            <h2 class="text-2xl font-semibold mb-6 border-b border-white/20 pb-4">
+          <div class="md:col-span-2 bg-white/10 border border-white/20 p-8 text-white">
+            <h2 class="text-2xl font-semibold mb-4 border-b border-white/20 pb-4 ">
               Ihr Waldboden ist unser Thema
             </h2>
             <div class="space-y-4">
@@ -42,15 +42,15 @@
           </div>
 
           <!-- Statistics Section -->
-          <div class="space-y-6">
-            <div class="bg-white/10 border border-white/20 rounded-xl p-6 text-white flex items-center">
+          <div class="space-y-4">
+            <div class="bg-white/10 border border-white/20 p-6 text-white flex items-center">
               <component :is="DocumentIcon" class="w-12 h-12 mr-6 text-green-400 flex-shrink-0" />
               <div>
                 <h3 class="text-xl font-semibold">1.000+</h3>
                 <p class="text-gray-300">Kartierprojekte</p>
               </div>
             </div>
-            <div class="bg-white/10 border border-white/20 rounded-xl p-6 text-white flex items-center">
+            <div class="bg-white/10 border border-white/20 p-6 text-white flex items-center">
               <component :is="MapPinIcon" class="w-12 h-12 mr-6 text-green-400 flex-shrink-0" />
               <div>
                 <h3 class="text-xl font-semibold">1.000.000+</h3>
@@ -61,8 +61,8 @@
         </div>
 
         <!-- Viewer Options -->
-        <div class="grid md:grid-cols-2 gap-8">
-          <div class="bg-white/20 backdrop-blur rounded-lg p-6 border border-white/30">
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="bg-white/20 backdrop-blur p-6 border border-white/30">
             <h3 class="text-2xl font-bold text-white mb-4">VfS Viewer</h3>
             <p class="text-green-100 mb-4">
               Der öffentlich zugängliche Bereich zeigt kartierte Waldflächen und gibt Auskunft über Zuständigkeitsbereiche.
@@ -75,7 +75,7 @@
             </router-link>
           </div>
 
-          <div class="bg-white/20 backdrop-blur rounded-lg p-6 border border-white/30">
+          <div class="bg-white/20 backdrop-blur p-6 border border-white/30">
             <h3 class="text-2xl font-bold text-white mb-4">VfS Viewer Plus</h3>
             <p class="text-green-100 mb-4">
              Passwortgeschützter Bereich für Forstzusammenschlüsse und Waldbesitzer mit detaillierten Karten und Baumarten-Eignungstabelle.
