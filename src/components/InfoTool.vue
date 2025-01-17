@@ -237,6 +237,7 @@ const makeGetFeatureInfoRequest = async (evt) => {
   try {
     const projection = props.map.getView().getProjection().getCode();
     const queryPromises = [];
+    const queriedSources = new Set(); // Track which source layers we've already queried
 
     props.map.getLayers().forEach((layer) => {
       const rawLayer = toRaw(layer);
@@ -263,9 +264,10 @@ const makeGetFeatureInfoRequest = async (evt) => {
 
       const layerVersion = source.getParams()?.VERSION || '1.3.0';
 
-      console.log(layerNamesToQuery, layersParam)
-      if (layerNamesToQuery.includes(layersParam)) {
-
+      // Only query if we haven't queried this source layer yet
+      if (layerNamesToQuery.includes(layersParam) && !queriedSources.has(layersParam)) {
+        queriedSources.add(layersParam); // Mark this source as queried
+        
         queryPromises.push(
           queryLayerForFeatureInfo(layer, coordinate, projection, url, layerVersion, layersParam)
         );
@@ -285,7 +287,7 @@ const makeGetFeatureInfoRequest = async (evt) => {
     }
   } catch (error) {
     console.error('Error in makeGetFeatureInfoRequest:', error);
-    message.value = 'Lade Informationen...';
+    message.value = 'Fehler beim Laden der Informationen';
     removeMarker();
   } finally {
     isLoading.value = false;

@@ -38,7 +38,7 @@ export function useLayerManagement(providedMap = null) {
     naturschutz: 'schutzgebiete:natur',
     soilNutrients: '0',
     alkisParzellarkarte: 'by_alkis_parzellarkarte_farbe',
-    standorte: 'vfs:standorte'
+    standorte: 'Standorte', 
   }
 
   const getLayerLabel = (layerName) => {
@@ -54,6 +54,18 @@ export function useLayerManagement(providedMap = null) {
       naturschutz: 'Naturschutzgebiete',
       alkisParzellarkarte: 'ALKIS Parzellarkarte',
       standorte: 'Standorte',
+      bergahorn: 'Bergahorn',
+      buche: 'Buche',
+      douglasie: 'Douglasie',
+      eiche: 'Eiche',
+      ela: 'Europäische Lärche',
+      esche: 'Esche',
+      fichte: 'Fichte',
+      kiefer: 'Kiefer',
+      kirsche: 'Kirsche',
+      schwarzerle: 'Schwarzerle',
+      tanne: 'Tanne',
+      winterlinde: 'Winterlinde'
     }
     return labels[layerName] || layerName
   }
@@ -106,26 +118,46 @@ export function useLayerManagement(providedMap = null) {
       }
     }
   
-    // z-index of layers on start
+    // Get the source layer to determine the correct WMS configuration
+    const sourceLayer = layerStore.getLayerSource(layerName)
+    let style = layerStore.getLayerStyle(layerName)
+    
+    // Create a unique identifier for the layer combining source and style
+    const layerKey = style ? `${sourceLayer}_${style}` : sourceLayer
+    
+    // If this layer is using 'standorte' as its source, use the standorte WMS config
+    const config = sourceLayer === 'vfs:standorte' 
+      ? wmsConfig.standorte 
+      : (wmsConfig[layerName] || wmsConfig.default)
+  
     const zIndexMap = {
-      soilNutrients: 4,
       regierungsbezirk: 1,
       landkreis: 2,
       gemeinde: 3,
-      flurkartenSchnitt: 8,
+      soilNutrients: 4,
       kartiergebiete: 5,
-      alkisParzellarkarte: 7,
-      standorte: 6 
+      alkisParzellarkarte: 6,
+      flurkartenSchnitt: 7,
+      bergahorn: 8,
+      buche: 9,
+      douglasie: 10,
+      eiche: 11,
+      ela: 12,
+      esche: 13,
+      fichte: 14,
+      kiefer: 15,
+      kirsche: 16,
+      schwarzerle: 17,
+      tanne: 18,
+      standorte: 19,
     }
   
-    const config = wmsConfig[layerName] || wmsConfig.default
     const zIndex = zIndexMap[layerName] || 5
   
-    // Add auth headers for protected layers
     let sourceConfig = {
       url: config.url,
       params: {
-        'LAYERS': layerSources[layerName],
+        'LAYERS': layerSources[sourceLayer] || sourceLayer,
         'FORMAT': 'image/png',
         'TRANSPARENT': true,
         'VERSION': config.version
@@ -135,26 +167,27 @@ export function useLayerManagement(providedMap = null) {
       wrapX: false
     }
   
+    if (style) {
+      sourceConfig.params['STYLES'] = style
+    }
+  
     // Add auth headers for protected layers
-    if (layerStore.isLayerProtected(layerName) && authStore.isAuthenticated  && layerStore.layerNeedsBearer(layerName)) {
-      console.log(`fetching secured layer ${layerName} with auth header ${authStore.authHeaders}`)
+    if (layerStore.isLayerProtected(layerName) && authStore.isAuthenticated) {
       sourceConfig = {
         ...sourceConfig,
         imageLoadFunction: (image, src) => {
-
-          // Add authorization header to image request
           fetch(src, {
             headers: authStore.authHeaders,
             credentials: 'include'
           })
             .then(response => response.blob())
             .then(blob => {
-              const url = URL.createObjectURL(blob);
-              image.getImage().src = url;
+              const url = URL.createObjectURL(blob)
+              image.getImage().src = url
             })
             .catch(error => {
-              console.error('Error loading WMS image:', error);
-            });
+              console.error('Error loading WMS image:', error)
+            })
         }
       }
     }
@@ -162,12 +195,16 @@ export function useLayerManagement(providedMap = null) {
     const layer = new ImageLayer({
       source: new ImageWMS(sourceConfig),
       zIndex: zIndex,
-      opacity: layerOpacities.value[layerName] / 100
+      opacity: layerOpacities.value[layerName] / 100,
+      properties: {
+        name: layerName,
+        layerKey: layerKey
+      }
     })
   
     return layer
   }
-
+  
   const vectorStyles = {
     vectorColor: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_col.json',
     vectorRelief: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_top.json',
@@ -254,17 +291,40 @@ export function useLayerManagement(providedMap = null) {
       alkisParzellarkarte: {
         url: 'https://geoservices.bayern.de/od/wms/alkis/v1/parzellarkarte',
         version: '1.3.0'
+      },
+      standorte: {
+        url: `${API_BASE_URL}/api/geoserver/wms`,
+        version: '1.3.0'
       }
     }
   
+    // Get the source layer and style
+    const sourceLayer = layerStore.getLayerSource(layerName)
+    const style = layerStore.getLayerStyle(layerName)
+    
+    // If this layer is using 'standorte' as its source, use the standorte WMS config
+    const config = sourceLayer === 'vfs:standorte' 
+      ? wmsConfig.standorte 
+      : (wmsConfig[layerName] || wmsConfig.default)
+  
     const baseUrl = needsAuth
       ? `${API_BASE_URL}/api/geoserver/wms`
-      : (wmsConfig[layerName]?.url || wmsConfig.default.url)
-
-    const version = wmsConfig[layerName]?.version || wmsConfig.default.version
-    const layerSource = layerSources[layerName]
+      : config.url
+  
+    const version = config.version
+    const params = new URLSearchParams({
+      REQUEST: 'GetLegendGraphic',
+      VERSION: version,
+      FORMAT: 'image/png',
+      LAYER: layerSources[sourceLayer] || sourceLayer
+    })
+  
+    // Add style parameter if specified
+    if (style) {
+      params.append('STYLE', style)
+    }
     
-    return `${baseUrl}?REQUEST=GetLegendGraphic&VERSION=${version}&FORMAT=image/png&LAYER=${layerSource}`
+    return `${baseUrl}?${params.toString()}`
   }
   
   const loadLegend = async (layerName) => {
@@ -278,8 +338,11 @@ export function useLayerManagement(providedMap = null) {
       if (layerStore.layerNeedsBearer(layerName) && authStore.isAuthenticated) {
         console.log('Fetching protected legend for', layerName)
         
+        const url = getLegendUrl(layerName)
+        console.log('Legend URL:', url)
+        
         // Use fetchWithAuth from authStore for protected layers
-        const response = await fetch(getLegendUrl(layerName), {
+        const response = await fetch(url, {
           headers: authStore.authHeaders
         })
   
@@ -306,55 +369,65 @@ export function useLayerManagement(providedMap = null) {
     }
   }
 
-
   const toggleLayer = (layerName) => {
     if (!map.value) {
       console.warn(`Cannot toggle layer ${layerName}: no map available`)
       return
     }
-
-    console.log(`Toggle called for ${layerName}`)
-
+  
     if (layerStore.isLayerProtected(layerName) && !authStore.isAuthenticated) {
       console.log('Cannot toggle protected layer - user not authenticated')
       return
     }
-
-    const currentlyActive = layers.value[layerName]
+  
+    // Get current visibility state
+    const currentlyActive = layers.value[layerName]?.visible ?? false
+    const newVisibility = !currentlyActive
     
-    // Update store first
-    layerStore.setLayerVisibility(layerName, !currentlyActive)
+    console.log(`Toggling ${layerName} from ${currentlyActive} to ${newVisibility}`)
+  
+    // Update store visibility
+    layerStore.setLayerVisibility(layerName, newVisibility)
     
-    // Check all layers on the map to ensure no duplicates
+    // Get all layers from the map
     const mapLayers = map.value.getLayers().getArray()
-    console.log('All map layers:', mapLayers.length)
     
-    mapLayers.forEach(layer => {
-      const source = layer.getSource()
-      if (source instanceof ImageWMS) {
-        const params = source.getParams()
-        console.log('Layer params:', params)
-        if (params.LAYERS === layerSources[layerName]) {
-          console.log('Found matching layer, removing it')
-          map.value.removeLayer(layer)
-        }
-      }
-    })
-
-    // If we're turning the layer on, create a new one
-    if (!currentlyActive) {
-      console.log('Creating new layer')
-      const layer = createWMSLayer(layerName)
-      wmsLayers.set(layerName, layer)
-      map.value.addLayer(layer)
-      loadLegend(layerName)
-    } else {
-      // If we're turning it off, clean up references
+    // Find the specific layer using the layerKey
+    const style = layerStore.getLayerStyle(layerName)
+    const sourceLayer = layerStore.getLayerSource(layerName)
+    const layerKey = style ? `${sourceLayer}_${style}` : sourceLayer
+    
+    const existingLayer = mapLayers.find(layer => 
+      layer.get('name') === layerName && 
+      layer.get('layerKey') === layerKey
+    )
+  
+    if (!newVisibility && existingLayer) {
+      // We're turning the layer off
+      console.log('Removing layer from map:', layerName)
+      map.value.removeLayer(existingLayer)
       wmsLayers.delete(layerName)
       layerStore.setLegendUrl(layerName, null)
+    } else if (newVisibility) {
+      // We're turning the layer on
+      console.log('Creating new layer:', layerName)
+      
+      // Clean up existing layer if any
+      if (existingLayer) {
+        console.log('Removing existing layer before creating new one')
+        map.value.removeLayer(existingLayer)
+        wmsLayers.delete(layerName)
+      }
+      
+      // Create and add new layer
+      const newLayer = createWMSLayer(layerName)
+      wmsLayers.set(layerName, newLayer)
+      map.value.addLayer(newLayer)
+      loadLegend(layerName)
     }
   }
 
+  
   const initializeLayers = () => {
     // Only proceed if map is provided and not already initialized
     if (!map.value || initialized.value) {
@@ -372,7 +445,7 @@ export function useLayerManagement(providedMap = null) {
       layer instanceof TileLayer && 
       (layer.get('type') === 'background' || layer.get('name') === 'background')
     )
-
+  
     // Remove only WMS layers that are not the background layer
     existingLayers.forEach(layer => {
       if (layer.getSource() instanceof ImageWMS && layer !== backgroundLayer) {
@@ -382,11 +455,11 @@ export function useLayerManagement(providedMap = null) {
     })
     
     wmsLayers.clear()
-
+  
     // Add active layers from store
-    Object.entries(layers.value).forEach(([layerName, isActive]) => {
-      console.warn(`Checking layer ${layerName}, active: ${isActive}`)
-      if (isActive) {
+    Object.entries(layers.value).forEach(([layerName, layerConfig]) => {
+      console.warn(`Checking layer ${layerName}, active: ${layerConfig.visible}`)
+      if (layerConfig.visible) {
         console.warn(`Creating layer ${layerName}`)
         const layer = createWMSLayer(layerName)
         wmsLayers.set(layerName, layer)
@@ -399,16 +472,15 @@ export function useLayerManagement(providedMap = null) {
         loadLegend(layerName)
       }
     })
-
+  
     // Ensure background layer is added if not already present
     if (backgroundLayer && !existingLayers.includes(backgroundLayer)) {
       map.value.addLayer(backgroundLayer)
     }
-
+  
     initialized.value = true
     console.warn('Initialization complete. Current layers:', [...wmsLayers.keys()])
   }
-
 
 
   const isLayerAvailable = (layerName) => {

@@ -25,6 +25,176 @@
     <!-- Layer Groups -->
     <div class="space-y-2">
       <!-- Map Contents -->
+
+      <!-- Waldbodeninformationen (Forest Soil Information) -->
+      <div 
+    class="border overflow-hidden rounded-lg"
+    :class="{ 
+      'bg-zinc-100': openSections.forestInfo,
+      'opacity-75': !authStore.isAuthenticated
+    }"
+  >
+    <button 
+      @click="toggleSection('forestInfo')"
+      class="w-full p-3 flex justify-between items-center hover:bg-zinc-200 rounded-lg relative"
+    >
+      <span class="font-medium">Waldbodeninformationen</span>
+      
+      <!-- Lock icon to indicate some content is locked -->
+      <div v-if="!authStore.isAuthenticated" 
+           class="absolute right-12 top-1/2 transform -translate-y-1/2"
+      >
+        <svg 
+          class="w-4 h-4 text-gray-500" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            stroke-width="2" 
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+          />
+        </svg>
+      </div>
+
+      <svg 
+        class="w-5 h-5 transform transition-transform"
+        :class="{ 'rotate-180': openSections.forestInfo }"
+        fill="none" 
+        stroke="currentColor" 
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+
+    <div v-show="openSections.forestInfo" 
+         class="border-t border-gray-300 max-h-96 overflow-y-auto ps-2 py-2"
+    >
+      <draggable 
+        v-model="layerOrder"
+        v-bind="dragOptions"
+        item-key="name"
+        class="space-y-2"
+        @change="handleLayerOrderChange"
+      >
+        <template #item="{ element: layerName }">
+          <div 
+            v-if="['standorte', 'fichte', 'soilNutrients',         'bergahorn',
+        'buche',
+        'douglasie',
+        'eiche',
+        'ela',
+        'esche',
+        'fichte',
+        'kiefer',
+        'kirsche',
+        'schwarzerle',
+        'stieleiche',
+        'tanne',
+        'traubeneiche',
+        'winterlinde',
+        'kartiergebiete'].includes(layerName)"
+            class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors relative"
+            :class="{ 
+              'bg-blue-100 hover:bg-blue-100': layers[layerName]?.visible,
+              'opacity-75': !authStore.isAuthenticated 
+            }"
+          >
+            <div class="flex flex-col space-y-2">
+              <!-- Main Layer Controls -->
+              <div class="flex items-center">
+                <div class="drag-handle cursor-grab p-1">
+                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                  </svg>
+                </div>
+                
+                <!-- Checkbox and Label -->
+                <div class="flex-1 flex items-center min-w-0">
+                  <input 
+                    type="checkbox" 
+                    :checked="layers[layerName]?.visible ?? false"
+                    @change="toggleLayer(layerName)"
+                    :disabled="!authStore.isAuthenticated"
+                    class="mr-2"
+                    :class="{ 'cursor-not-allowed': !authStore.isAuthenticated }"
+                  >
+                  <span class="flex-1 truncate mr-2">{{ getLayerLabel(layerName) }}</span>
+                  
+                  <!-- Lock icon for each locked layer -->
+                  <svg 
+                    v-if="!authStore.isAuthenticated"
+                    class="w-4 h-4 text-gray-500 mr-2" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      stroke-linecap="round" 
+                      stroke-linejoin="round" 
+                      stroke-width="2" 
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                </div>
+
+                <!-- Info Icon -->
+                <div>
+                  <svg 
+                    class="w-4 h-4 text-gray-500 hover:text-gray-700 cursor-help"
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                    @mouseenter="updateTooltipPosition($event, layerName)"
+                    @mouseleave="hoveredLayer = null"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Controls when layer is active -->
+              <div v-if="layers[layerName]?.visible && authStore.isAuthenticated" class="pl-7">
+                <!-- Opacity Slider -->
+                <div class="flex items-center space-x-2 mb-2">
+                  <span class="text-xs text-gray-500 w-8">0%</span>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    v-model="layerOpacities[layerName]" 
+                    @input="updateLayerOpacity(layerName)"
+                    class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  >
+                  <span class="text-xs text-gray-500 w-8">{{ layerOpacities[layerName] }}%</span>
+                </div>
+
+                <!-- Legend Display -->
+                <div v-if="legends[layerName]">
+                  <div class="relative">
+                    <img 
+                      :src="legends[layerName]" 
+                      :alt="'Legend for ' + getLayerLabel(layerName)"
+                      class="max-w-full cursor-pointer"
+                      @click="openLegendModal(layerName)"
+                      @load="checkLegendSize($event, layerName)"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </draggable>
+
+      <!-- Login hint message -->
+
+    </div>
+  </div>
+
       <div 
       class="border overflow-hidden rounded-lg" 
       :class="{ 'bg-zinc-100': openSections.mapContents }"
@@ -54,71 +224,84 @@
           >
 
           <template #item="{ element: layerName }">
-  <div 
-    v-if="!['trinkwasser', 'landschaftsschutz', 'naturschutz'].includes(layerName)"
-    class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors"
-    :class="layers[layerName] == true ? 'bg-blue-100 hover:bg-blue-100' : 'bg-white'"
-  >
-    <div class="flex flex-col space-y-2">
-      <!-- Main Layer Controls -->
-      <div class="flex items-center">
-        <!-- Drag Handle -->
-        <div class="drag-handle cursor-grab p-1">
-          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
-          </svg>
-        </div>
-        
-        <!-- Checkbox and Label -->
-        <div class="flex-1 flex items-center min-w-0">
-          <input 
-            type="checkbox" 
-            :checked="layers[layerName]"
-            @change="toggleLayer(layerName)"
-            class="mr-2"
-            :disabled="!isLayerAvailable(layerName)"
-          >
-          <span 
-            class="flex-1 truncate mr-2" 
-            :class="{ 'text-gray-400': !isLayerAvailable(layerName) }"
-          >
-            {{ getLayerLabel(layerName) }}
-            <span v-if="!isLayerAvailable(layerName)" class="text-xs text-gray-400 ml-1">
-              (Login erforderlich)
-            </span>
-          </span>
-        </div>
-        
-        <!-- Info Icon -->
-        <div>
-          <svg 
-            class="w-4 h-4 text-gray-500 hover:text-gray-700 cursor-help"
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-            @mouseenter="updateTooltipPosition($event, layerName)"
-            @mouseleave="hoveredLayer = null"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
+            <div 
+            v-if="['flurkartenSchnitt', 'alkisParzellarkarte', 'gemeinde', 'landkreis', 'regierungsbezirk'].includes(layerName)"
+            class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors"
+  :class="{ 'bg-blue-100 hover:bg-blue-100': layers[layerName]?.visible }"
+>
+  <div class="flex flex-col space-y-2">
+    <!-- Main Layer Controls -->
+    <div class="flex items-center">
+      <div class="drag-handle cursor-grab p-1">
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+        </svg>
       </div>
       
-      <!-- Controls when layer is active -->
-      <div v-if="layers[layerName]" class="pl-7">
-        <!-- Opacity Slider -->
-        <div class="flex items-center space-x-2 mb-2">
-          <span class="text-xs text-gray-500 w-8">0%</span>
-          <input 
-            type="range" 
-            min="0" 
-            max="100" 
-            v-model="layerOpacities[layerName]" 
-            @input="updateLayerOpacity(layerName)"
-            class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-          >
-          <span class="text-xs text-gray-500 w-8">{{ layerOpacities[layerName] }}%</span>
-        </div>
+      <!-- Checkbox and Label with v-model -->
+      <div class="flex-1 flex items-center min-w-0">
+  <input 
+    type="checkbox" 
+    :checked="layers[layerName]?.visible ?? false"
+    @change="toggleLayer(layerName)"
+    :disabled="!isLayerAvailable(layerName)"
+    class="mr-2"
+    :class="{ 'cursor-not-allowed': !isLayerAvailable(layerName) }"
+  >
+  <span 
+    class="flex-1 truncate mr-2" 
+    :class="{ 'text-gray-400': !isLayerAvailable(layerName) }"
+  >
+    {{ getLayerLabel(layerName) }}
+  </span>
+  
+  <!-- Lock icon for protected layers -->
+  <svg 
+    v-if="!isLayerAvailable(layerName)"
+    class="w-4 h-4 text-gray-500 mr-2" 
+    fill="none" 
+    stroke="currentColor" 
+    viewBox="0 0 24 24"
+  >
+    <path 
+      stroke-linecap="round" 
+      stroke-linejoin="round" 
+      stroke-width="2" 
+      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+    />
+  </svg>
+</div>
+      <!-- Info Icon -->
+      <div>
+        <svg 
+          class="w-4 h-4 text-gray-500 hover:text-gray-700 cursor-help"
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+          @mouseenter="updateTooltipPosition($event, layerName)"
+          @mouseleave="hoveredLayer = null"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+    </div>
+    
+    <!-- Controls when layer is active -->
+    <div v-show="layers[layerName]?.visible" class="pl-7">
+      <!-- Opacity Slider -->
+      <div class="flex items-center space-x-2 mb-2">
+        <span class="text-xs text-gray-500 w-8">0%</span>
+        <input 
+          type="range" 
+          min="0" 
+          max="100" 
+          v-model="layerOpacities[layerName]" 
+          @input="updateLayerOpacity(layerName)"
+          class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+        >
+        <span class="text-xs text-gray-500 w-8">{{ layerOpacities[layerName] }}%</span>
+      </div>
+
 
         <!-- Legend Display -->
         <div v-if="legends[layerName]">
@@ -190,9 +373,10 @@
                     <div class="flex-1 flex items-center min-w-0">
                       <input 
                         type="checkbox" 
-                        :checked="layers[layerName]"
+                        :checked="layers[layerName]?.visible ?? false"
                         @change="toggleLayer(layerName)"
                         class="mr-2"
+                        :disabled="!isLayerAvailable(layerName)"
                       >
                       <span class="flex-1 truncate mr-2">{{ getLayerLabel(layerName) }}</span>
                     </div>
@@ -213,7 +397,7 @@
                   </div>
 
                   <!-- Controls when layer is active -->
-                  <div v-if="layers[layerName]" class="pl-7">
+                  <div v-if="layers[layerName]?.visible" class="pl-7">
                     <!-- Opacity Slider -->
                     <div class="flex items-center space-x-2 mb-2">
                       <span class="text-xs text-gray-500 w-8">0%</span>
@@ -341,6 +525,7 @@
 import { ref, watch, onUnmounted, defineProps } from 'vue'
 import { useLayerManagement } from '../composables/useLayerManagement'
 import draggable from 'vuedraggable'
+import { useAuthStore } from '../stores/authStore'
 
 const props = defineProps({
   map: {
@@ -365,6 +550,8 @@ const {
   isLayerAvailable
 } = useLayerManagement(props.map)
 
+const authStore = useAuthStore()
+
 // Draggable configuration
 const dragOptions = {
   animation: 200,
@@ -374,9 +561,10 @@ const dragOptions = {
 
 // Section management
 const openSections = ref({
-  mapContents: true,
+  mapContents: !authStore.isAuthenticated,
   protectedAreas: false,
-  background: false
+  background: false,
+  forestInfo: authStore.isAuthenticated
 })
 
 // Legend management
@@ -394,7 +582,7 @@ const tooltipStyle = ref({})
 const layerInfo = {
   kartiergebiete: "Detaillierte Informationen über die Kartiergebiete...",
   trinkwasser: "Informationen über Trinkwasserschutzgebiete...",
-  landschaftsschutz: "Informationen über Landschaftsschutzgebiete...",
+  landschaftsschutz: "Informationen über Landschaftsschutzgebiete und noch ganz vieles Mehr etc.",
   naturschutz: "Informationen über Naturschutzgebiete...",
   standorte: "Standorte Layer - Login erforderlich für Zugriff",
 }
@@ -455,6 +643,14 @@ watch(() => props.map, (newMap) => {
     }
   }
 }, { immediate: true })
+
+watch(
+  () => authStore.isAuthenticated,
+  (isAuthenticated) => {
+    openSections.value.mapContents = !isAuthenticated
+    openSections.value.forestInfo = isAuthenticated
+  }
+)
 
 // Cleanup on unmount
 onUnmounted(() => {
