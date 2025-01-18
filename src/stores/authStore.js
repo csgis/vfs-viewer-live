@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config'
 // stores/authStore.js
 import { defineStore } from 'pinia'
 
@@ -34,7 +35,7 @@ export const useAuthStore = defineStore('auth', {
           credentials: 'include'
         })
     
-        const response = await fetch(`${API_URL}/token`, {
+        const response = await fetch(`${API_BASE_URL}/token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -111,7 +112,7 @@ export const useAuthStore = defineStore('auth', {
     // Other methods remain the same...
     async fetchUserInfo() {
       try {
-        const response = await fetch(`${API_URL}/api/auth/me`, {
+        const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
           headers: this.authHeaders
         })
 
@@ -142,7 +143,7 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async fetchWithAuth(url, options = {}) {
-      const response = await fetch(`${API_URL}${url}`, {
+      const response = await fetch(`${API_BASE_URL}${url}`, {
         ...options,
         headers: {
           ...this.authHeaders,

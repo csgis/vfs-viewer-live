@@ -6,9 +6,10 @@ import App from './App.vue'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router'
+import { validateConfig } from './config/validate'
 
-// Add this after OpenLayers CSS
-
+// environment handling
+validateConfig()
 
 const app = createApp(App)
 const pinia = createPinia()
