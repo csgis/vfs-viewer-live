@@ -174,16 +174,34 @@
 
                 <!-- Legend Display -->
                 <div v-if="legends[layerName]">
-                  <div class="relative">
-                    <img 
-                      :src="legends[layerName]" 
-                      :alt="'Legend for ' + getLayerLabel(layerName)"
-                      class="max-w-full cursor-pointer"
-                      @click="openLegendModal(layerName)"
-                      @load="checkLegendSize($event, layerName)"
-                    />
-                  </div>
-                </div>
+  <div class="relative">
+    <div :class="{'max-h-32 overflow-hidden': isLegendLarge(layerName) && !expandedLegends[layerName]}">
+      <img 
+        :src="legends[layerName]" 
+        :alt="'Legend for ' + getLayerLabel(layerName)"
+        class="max-w-full cursor-pointer"
+        @click="openLegendModal(layerName)"
+        @load="checkLegendSize($event, layerName)"
+      />
+    </div>
+    <div class="flex space-x-2 mt-1">
+      <button 
+        v-if="isLegendLarge(layerName)"
+        @click="toggleLegend(layerName)"
+        class="text-sm text-blue-400 hover:text-blue-300"
+      >
+        {{ expandedLegends[layerName] ? 'Zeige weniger' : 'Zeige mehr' }}
+      </button>
+      <button 
+        v-if="isLegendLarge(layerName)"
+        @click="openLegendModal(layerName)"
+        class="text-sm text-blue-400 hover:text-blue-300"
+      >
+        Vergrößern
+      </button>
+    </div>
+  </div>
+</div>
               </div>
             </div>
           </div>
