@@ -82,21 +82,24 @@
       >
         <template #item="{ element: layerName }">
           <div 
-            v-if="['standorte', 'fichte', 'soilNutrients',         'bergahorn',
-        'buche',
-        'douglasie',
-        'eiche',
-        'ela',
-        'esche',
-        'fichte',
-        'kiefer',
-        'kirsche',
-        'schwarzerle',
-        'stieleiche',
-        'tanne',
-        'traubeneiche',
-        'winterlinde',
-        'kartiergebiete'].includes(layerName)"
+            v-if="[
+              'standorte', 
+              'fichte', 
+              'bergahorn',
+              'buche',
+              'douglasie',
+              'eiche',
+              'ela',
+              'esche',
+              'fichte',
+              'kiefer',
+              'kirsche',
+              'schwarzerle',
+              'stieleiche',
+              'tanne',
+              'traubeneiche',
+              'winterlinde'
+        ].includes(layerName)"
             class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors relative"
             :class="{ 
               'bg-blue-100 hover:bg-blue-100': layers[layerName]?.visible,
@@ -243,7 +246,7 @@
 
           <template #item="{ element: layerName }">
             <div 
-            v-if="['flurkartenSchnitt', 'alkisParzellarkarte', 'gemeinde', 'landkreis', 'regierungsbezirk'].includes(layerName)"
+            v-if="['flurkartenSchnitt', 'alkisParzellarkarte','kartiergebiete', 'gemeinde', 'landkreis', 'regierungsbezirk'].includes(layerName)"
             class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors"
   :class="{ 'bg-blue-100 hover:bg-blue-100': layers[layerName]?.visible }"
 >
@@ -531,7 +534,7 @@
   <Teleport to="body">
     <div 
       v-if="hoveredLayer"
-      class="fixed bg-gray-900 text-white text-sm p-2 rounded shadow-lg w-48 z-[100]"
+      class="fixed bg-gray-900 text-white text-sm p-2 rounded shadow-lg max-w-96 z-[100]"
       :style="tooltipStyle"
     >
       {{ getLayerInfo(hoveredLayer) }}
@@ -598,11 +601,31 @@ const tooltipStyle = ref({})
 
 // Layer information texts
 const layerInfo = {
-  kartiergebiete: "Detaillierte Informationen über die Kartiergebiete...",
-  trinkwasser: "Informationen über Trinkwasserschutzgebiete...",
-  landschaftsschutz: "Informationen über Landschaftsschutzgebiete und noch ganz vieles Mehr etc.",
-  naturschutz: "Informationen über Naturschutzgebiete...",
-  standorte: "Standorte Layer - Login erforderlich für Zugriff",
+  flurkartenSchnitt: 'Quelle: VFS-München; Flurkartenschnitt',
+        regierungsbezirk: 'Quelle: VFS-München; Regierungsbezirke',
+        landkreis: 'Quelle: VFS-München; Landkreise',
+        gemeinde: 'Quelle: VFS-München; Gemeinden',
+        kartiergebiete: 'Quelle: VFS-München; Übersichtslayer zum Kartiergebiet',
+        trinkwasser: 'Quelle: VFS-München; Trinkwasserschutz Gebiete',
+        landschaftsschutz: 'Quelle: VFS-München; Landschaftsschutz Gebiete',
+        naturschutz: 'Quelle: VFS-München; Naturschutz Gebiete',
+        soilNutrients: '',
+        alkisParzellarkarte: 'Quelle: https://geodatenonline.bayern.de; Der ALKIS®-Parzellarkarte-WMS ist nach dem Vorbild der ALKIS®-Flurkarte gebaut, beinhaltet aber Objekte der Flurkarte ohne Flurstücksnummern, ohne Grenzzeichen und ohne Unterscheidung der Grenzen, mit Gebäuden, Lagebezeichnungen und TN-Objekten.',
+        standorte: 'Quelle: VFS-München; Detaillayer zu einzelnen Waldbesitzer Standorten',
+        bergahorn: 'Quelle: VFS-München; Detailansicht der Baumart',
+        buche: 'Quelle: VFS-München; Detailansicht der Baumart',
+        douglasie: 'Quelle: VFS-München; Detailansicht der Baumart',
+        eiche: 'Quelle: VFS-München; Detailansicht der Baumart',
+        ela: 'Quelle: VFS-München; Detailansicht der Baumart',
+        esche: 'Quelle: VFS-München; Detailansicht der Baumart',
+        fichte: 'Quelle: VFS-München; Detailansicht der Baumart',
+        kiefer: 'Quelle: VFS-München; Detailansicht der Baumart',
+        kirsche: 'Quelle: VFS-München; Detailansicht der Baumart',
+        schwarzerle: 'Quelle: VFS-München; Detailansicht der Baumart',
+        stieleiche: 'Quelle: VFS-München; Detailansicht der Baumart',
+        tanne: 'Quelle: VFS-München; Detailansicht der Baumart',
+        traubeneiche: 'Quelle: VFS-München; Detailansicht der Baumart',
+        winterlinde: 'Quelle: VFS-München; Detailansicht der Baumart',
 }
 
 // Methods
