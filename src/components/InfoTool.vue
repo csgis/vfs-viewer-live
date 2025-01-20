@@ -35,18 +35,19 @@
     </div>
   </div>
 
-  <!-- Scrollable Content -->
-  <div class="flex-1 overflow-y-auto p-4">
-    <div v-if="currentFeature">
-      <div 
-        v-for="(value, key) in currentFeature.properties" 
-        :key="key" 
-        class="border-b pb-2 mb-2"
-      >
-        <div class="font-medium text-gray-700">{{ formatKey(key) }}</div>
-        <div v-html="formatValue(value)"></div>
+    <!-- Scrollable Content -->
+    <div class="flex-1 overflow-y-auto p-4">
+      <div v-if="currentFeature">
+        <div 
+          v-for="[key, value] in filteredProperties" 
+          :key="key" 
+          class="border-b pb-2 mb-2"
+        >
+          <div class="font-medium text-gray-700">{{ formatKey(key) }}</div>
+          <div v-html="formatValue(value, key)"></div>
+        </div>
       </div>
-    </div>
+
   </div>
 
   <!-- Footer Navigation -->
@@ -92,6 +93,11 @@ import {
 } from 'ol/source';
 import { useAuthStore } from '../stores/authStore'
 
+import { 
+  isKeyBlacklisted, 
+  translateKey, 
+  transformValue 
+} from './feature-info-config';
 
 const props = defineProps({
   map: Object
@@ -199,25 +205,44 @@ const currentFeatureLayerName = computed(() => {
 });
 
 const formatKey = (key) => {
-  return key.replace(/_/g, ' ').toUpperCase();
+  const layerName = currentFeature.value?.layerName;
+  if (!layerName) return key.toUpperCase();
+  
+  return translateKey(layerName, key);
 };
 
-const formatValue = (value) => {
+const formatValue = (value, key) => {
   if (!value) return 'N/A';
   
-  if (Array.isArray(value)) {
-    return value.join(', ');
-  }
+  const layerName = currentFeature.value?.layerName;
+  if (!layerName) return value;
 
-  // URL regex pattern
-  const urlPattern = /^(https?:\/\/[^\s]+)$/;
+  // Transform the value based on layer and key
+  const transformedValue = transformValue(layerName, key, value);
   
-  if (typeof value === 'string' && urlPattern.test(value)) {
-    return `<a href="${value}" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:text-blue-900 underline">${value.replace(/\/$/, '')}</a>`;
+  if (Array.isArray(transformedValue)) {
+    return transformedValue.join(', ');
   }
 
-  return value;
+  // URL handling
+  const urlPattern = /^(https?:\/\/[^\s]+)$/;
+  if (typeof transformedValue === 'string' && urlPattern.test(transformedValue)) {
+    return `<a href="${transformedValue}" target="_blank" rel="noopener noreferrer" class="text-blue-700 hover:text-blue-900 underline">${transformedValue.replace(/\/$/, '')}</a>`;
+  }
+
+  return transformedValue;
 };
+
+
+const filteredProperties = computed(() => {
+  if (!currentFeature.value?.properties) return [];
+  
+  const layerName = currentFeature.value.layerName;
+  if (!layerName) return Object.entries(currentFeature.value.properties);
+  
+  return Object.entries(currentFeature.value.properties)
+    .filter(([key]) => !isKeyBlacklisted(layerName, key));
+});
 
 const hardcodedFormats = {
   "https://services.bgr.de": "geo+json",
@@ -331,11 +356,11 @@ const queryLayerForFeatureInfo = async (layer, coordinate, projection, layerUrl,
       url.searchParams.append(key, value);
     });
 
-    // Check if the layer is protected using the layer store getter
-    const isProtected = layerStore.isLayerProtected(layersParam) && layerStore.layerNeedsBearer(layersParam) ;
+    // Check if the layer needs bearer token
+    const needsBearer = layerStore.layerNeedsBearer(layersParam);
 
     var headers = {}
-    if (isProtected) {
+    if (needsBearer) {
       headers = authStore.authHeaders;
     }
 
@@ -357,6 +382,7 @@ const queryLayerForFeatureInfo = async (layer, coordinate, projection, layerUrl,
     throw error;
   }
 };
+
 
 const prevFeature = () => {
   if (currentIndex.value > 0) {
