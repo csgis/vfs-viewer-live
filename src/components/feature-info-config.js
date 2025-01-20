@@ -1,24 +1,34 @@
 // Configuration for key blacklists per layer
 export const keyBlacklists = {
     'vfs:standorte': ['gid', 'geom', 'internal_id', 'standorte_id', 'waldbesitzer', 'color'],
-    'vfs:kartiergebiete': ['gid', 'geom', 'created_by', 'color'],
-    // Add more layer-specific blacklists as needed
+    'vfs:kartiergebiete': ['gis_ha','gid', 'geom', 'created_by', 'color'],
+    'BÜK1000DE Version 2.1': ['Shape', 'Shape Length', 'Kurzlegende', 'LBA-Nummer', 'OBJECTID', 'Anteil der LE (Prozent)', 'Flaeche der LE (qkm)', 'Shape Area'],
   };
   
   // Configuration for key translations
   export const keyTranslations = {
     'vfs:standorte': {
-      'sto_name': 'Standort Boden',
+      'sto_name': 'Standort Beschreibung',
       'year': 'Jahr',
       'description': 'Beschreibung',
-      'area': 'Fläche (ha)',
-      // Add more key translations as needed
+      'area': 'Fläche',
+      'pw_ha': 'Privatwald',
+      'kw_ha': 'Kommunalwald',
+      'sto_ges': 'Standort Einheit'
     },
     'vfs:kartiergebiete': {
         'sto_name': 'Standort Boden',
         'year': 'Jahr',
         'description': 'Beschreibung',
-        'area': 'Fläche (ha)'
+        'area': 'Fläche (ha)',
+        'pw_ha': 'Privatwald',
+        'kw_ha': 'Kommunalwald',
+        'sto_ges': 'Standort Einheit',
+        'aelf': 'Amt für Landwirstschaft und Forsten',
+        'aelf_url': 'Amt für Landwirstschaft und Forsten URL'
+    },
+    'BÜK1000DE Version 2.1': {
+        'Langlegende': 'Bodenbeschreibung der Bundesanstalt für Geowissenschaften:'
     }
   };
   
@@ -87,7 +97,15 @@ const getRatingInfo = (value) => {
       },
       'area': (value) => {
         if (!value) return 'N/A';
-        return Number(value).toFixed(2);
+        return Number(value).toFixed(2) + ' ha';
+      },
+      'pw_ha': (value) => {
+        if (!value) return 'N/A';
+        return Number(value).toFixed(2) + ' ha';
+      },
+      'kw_ha': (value) => {
+        if (!value) return 'N/A';
+        return Number(value).toFixed(2) + ' ha';
       },
       // Tree species transformers
       'fichte': (value) => {
@@ -177,8 +195,20 @@ const getRatingInfo = (value) => {
         },
         'area': (value) => {
           if (!value) return 'N/A';
-          return Number(value).toFixed(2);
-        }
+          return Number(value).toFixed(2) + ' ha';
+        },
+        'pw_ha': (value) => {
+            if (!value) return 'N/A';
+            return Number(value).toFixed(2) + ' ha';
+          },
+        'kw_ha': (value) => {
+            if (!value) return 'N/A';
+            return Number(value).toFixed(2) + ' ha';
+        },
+        'gis_ha': (value) => {
+            if (!value) return 'N/A';
+            return Number(value).toFixed(2) + ' ha';
+          }
       }
   };
   
