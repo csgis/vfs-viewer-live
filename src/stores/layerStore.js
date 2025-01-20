@@ -44,7 +44,8 @@ export const useLayerStore = defineStore({
         soilNutrients: {
           visible: false,
           sourceLayer: '0',
-          protected: true
+          protected: true,
+          needsBearer: false
         },
         alkisParzellarkarte: {
           visible: false,

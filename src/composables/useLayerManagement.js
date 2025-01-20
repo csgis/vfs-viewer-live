@@ -172,7 +172,7 @@ export function useLayerManagement(providedMap = null) {
     }
   
     // Add auth headers for protected layers
-    if (layerStore.isLayerProtected(layerName) && authStore.isAuthenticated) {
+    if (layerStore.layerNeedsBearer(layerName)) {
       sourceConfig = {
         ...sourceConfig,
         imageLoadFunction: (image, src) => {
