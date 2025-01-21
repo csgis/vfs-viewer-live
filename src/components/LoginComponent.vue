@@ -130,9 +130,9 @@ const handleLogin = async () => {
     }
 
     router.push('/')
-  } catch (error) {
-    console.error('Login error details:', error)
-    error.value = error.message || 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.'
+  } catch (err) {
+    console.error('Login error details:', err.detail)
+    error.value = err
   } finally {
     isLoading.value = false
   }

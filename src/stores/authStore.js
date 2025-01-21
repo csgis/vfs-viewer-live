@@ -31,12 +31,12 @@ export const useAuthStore = defineStore('auth', {
         formData.append('password', password)
         
         console.log('Sending login request with:', {
-          url: `${API_BASE_URL}/token`,
+          url: `${API_BASE_URL}/api/auth/token`,
           body: formData.toString(),
           credentials: 'include'
         })
     
-        const response = await fetch(`${API_BASE_URL}/token`, {
+        const response = await fetch(`${API_BASE_URL}/api/auth/token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
