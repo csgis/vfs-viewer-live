@@ -1,10 +1,10 @@
 // Login.vue
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
       <!-- Header -->
       <div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h2 class="text-center text-3xl font-extrabold text-gray-900">
           Anmelden
         </h2>
       </div>
@@ -58,19 +58,7 @@
           </div>
         </div>
 
-        <!-- Remember Me -->
-        <div class="flex items-center">
-          <input 
-            id="remember-me" 
-            name="remember-me" 
-            type="checkbox" 
-            v-model="rememberMe"
-            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          >
-          <label for="remember-me" class="ml-2 block text-sm text-gray-900">
-            Angemeldet bleiben
-          </label>
-        </div>
+
 
         <!-- Submit Button -->
         <div>
@@ -89,6 +77,21 @@
             {{ isLoading ? 'Anmeldung läuft...' : 'Anmelden' }}
           </button>
         </div>
+
+        <!-- Remember Me -->
+        <div class="flex items-center">
+          <input 
+            id="remember-me" 
+            name="remember-me" 
+            type="checkbox" 
+            v-model="rememberMe"
+            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          >
+          <label for="remember-me" class="ml-2 block text-sm text-gray-900">
+            Angemeldet bleiben
+          </label>
+        </div>
+
       </form>
     </div>
   </div>

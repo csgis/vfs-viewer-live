@@ -54,7 +54,7 @@
     @click="!item.requiresAuth || authStore.isAuthenticated ? handleNavigation(item) : null"
     :buttonClass="[
         'w-full text-left mb-2 rounded-lg text-black hover:bg-gray-300 hover:text-black transition-colors relative',
-        currentPath === item.path ? 'bg-blue-900 text-blue-200' : '',
+        currentPath === item.path ? 'bg-gray-300 text-gray-900' : '',
         isExpanded ? 'p-3' : 'p-2 flex justify-center',
         item.requiresAuth && !authStore.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
     ]"
@@ -117,15 +117,33 @@
         }`"
       >
       <p class="text-sm text-gray-600">
-        {{ isExpanded ? '© powered by ' : '' }}
+        {{ isExpanded ? '© ' : '' }}
         <a 
             v-if="isExpanded" 
             href="https://csgis.de" 
             target="_blank" 
             rel="noopener noreferrer" 
-            class="text-blue-500 hover:underline"
+            class="hover:underline  text-gray-500"
         >
             csgis.de
+        </a> & 
+        <a 
+            v-if="isExpanded" 
+            href="http://www.vfs-muenchen.de/" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            class="hover:underline  text-gray-500"
+        >
+            vfs-muenchen.de
+        </a> | 
+        <a 
+            v-if="isExpanded" 
+            href="/dsgvo" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            class="hover:underline text-gray-500"
+        >
+            DSGVO
         </a>
         </p>
       </div>
