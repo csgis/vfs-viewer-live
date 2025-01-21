@@ -45,7 +45,7 @@ export const useUIStore = defineStore('ui', {
 
     showMapSidebar() {
       this.isMapSidebarVisible = true
-      this.mainSidebarExpanded = false  // Force collapse main sidebar
+      this.mainSidebarExpanded = false
     },
 
     hideMapSidebar() {

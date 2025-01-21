@@ -180,7 +180,6 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // Other methods remain the same...
     async fetchUserInfo() {
       try {
         const response = await fetch(`${API_BASE_URL}/api/auth/me`, {

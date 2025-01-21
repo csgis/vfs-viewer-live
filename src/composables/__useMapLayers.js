@@ -7,8 +7,7 @@ import TileLayer from 'ol/layer/Tile'
 import TileWMS from 'ol/source/TileWMS'
 
 export function useMapLayers() {
-  // Single source of truth for active background
-  const activeBackgroundType = ref('luftbilder') // Start with luftbilder
+  const activeBackgroundType = ref('luftbilder')
   const activeBackgroundLayer = shallowRef(null)
   
   // Cache for layer instances
