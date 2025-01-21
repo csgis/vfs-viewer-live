@@ -28,6 +28,12 @@ const router = createRouter({
       name: 'login',
       component: () => import('../components/LoginComponent.vue'),
       meta: { requiresAuth: false }
+    },
+    {
+      path: '/dsgvo',
+      name: 'dsgvo',
+      component: () => import('../components/dsgvoComponent.vue'),
+      meta: { requiresAuth: false }
     }
   ]
 })
