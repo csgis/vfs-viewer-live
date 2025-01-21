@@ -136,15 +136,13 @@
         >
             vfs-muenchen.de
         </a> | 
-        <a 
+        <router-link 
             v-if="isExpanded" 
-            href="/dsgvo" 
-            target="_blank" 
-            rel="noopener noreferrer" 
+              to="/dsgvo" 
             class="hover:underline text-gray-500"
-        >
+            >
             DSGVO
-        </a>
+          </router-link> 
         </p>
       </div>
     </div>
