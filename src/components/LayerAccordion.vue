@@ -505,10 +505,7 @@
               <input type="radio" name="background" value="osm" v-model="selectedBackground" @change="changeBackground">
               <span>Open Street Map</span>
             </label>
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="background" value="terrain" v-model="selectedBackground" @change="changeBackground">
-              <span>Stadiamaps Terrain</span>
-            </label>
+
             
             <!-- Vector tile options -->
             <label class="flex items-center space-x-2">
