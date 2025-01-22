@@ -1,3 +1,4 @@
+// app/main.js
 import './assets/main.css'
 import 'ol/ol.css'
 import './assets/ol-overrides.css'
