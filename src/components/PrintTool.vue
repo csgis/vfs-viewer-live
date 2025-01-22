@@ -73,6 +73,7 @@ import { useLayerManagement } from '../composables/useLayerManagement';
 import { useLayerStore } from '../stores/layerStore';
 import { useUIStore } from '../stores/uiStore';
 import { storeToRefs } from 'pinia';
+import { useAuthStore } from '../stores/authStore'
 
 const props = defineProps({
   map: {
@@ -87,6 +88,7 @@ const message = ref('Konfigurieren Sie die Druckeinstellungen');
 const title = ref('Kartenausschnitt');
 const format = ref('a4');
 const includeLegends = ref(true);
+const authStore = useAuthStore()
 
 // Get layer management functions and state
 const layerManagement = useLayerManagement();
@@ -198,99 +200,80 @@ const generateAndDownloadPDF = async () => {
    pdf.text(infoText, pdfWidth - sideMargin - infoWidth, titleY);
 
    // Add legends page if enabled
+
    if (includeLegends.value) {
-     console.log('Current layers state:', layers.value);
-     
-     const visibleLayers = Object.entries(layers.value)
-       .filter(([, isVisible]) => isVisible === true)
-       .map(([name]) => {
-         console.log(`Processing layer ${name}`);
-         const url = getLegendUrl(name);
-         return {
-           name,
-           url,
-           label: getLayerLabel(name)
-         };
-       });
+    const visibleLayers = Object.entries(layers.value)
+      .filter(([, layer]) => layer.visible === true)
+      .map(([name]) => ({
+        name,
+        url: getLegendUrl(name),
+        label: getLayerLabel(name)
+      }));
 
-     console.log('Visible layers:', visibleLayers);
+  if (visibleLayers.length > 0) {
+    pdf.addPage();
+    pdf.setFontSize(16);
+    pdf.text('Legende', sideMargin, 20);
+    
+    let currentY = 30;
+    const maxHeight = pdfHeight - 20;
+    for (const layer of visibleLayers) {
+      try {
+        const img = new Image();
+        await new Promise((resolve, reject) => {
+          const loadImage = () => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.crossOrigin = 'anonymous';
+          };
 
-     if (visibleLayers.length > 0) {
-       pdf.addPage();
-       
-       // Add "Legende" title
-       pdf.setFontSize(16);
-       pdf.text('Legende', sideMargin, 20);
-       
-       let currentY = 30;
-       const maxHeight = pdfHeight - 20;
+          if (layerStore.layerNeedsBearer(layer.name)) {
+            fetch(layer.url, {
+              headers: authStore.authHeaders,
+              credentials: 'include'
+            })
+              .then(response => response.blob())
+              .then(blob => {
+                loadImage();
+                img.src = URL.createObjectURL(blob);
+              })
+              .catch(reject);
+          } else {
+            loadImage();
+            img.src = layer.url;
+          }
+        });
 
-       for (const layer of visibleLayers) {
-         try {
-           console.log(`Processing legend for ${layer.name}`);
-           
-           // Add layer name
-           pdf.setFontSize(12);
-           pdf.text(layer.label, sideMargin, currentY);
-           currentY += 8;
+        pdf.setFontSize(12);
+        pdf.text(layer.label, sideMargin, currentY);
+        currentY += 8;
 
-           // Create temporary image element to get dimensions
-           const img = new Image();
-           await new Promise((resolve, reject) => {
-             img.onload = () => {
-               console.log(`Legend image loaded for ${layer.name}, dimensions:`, img.width, 'x', img.height);
-               resolve();
-             };
-             img.onerror = (error) => {
-               console.error(`Failed to load legend for ${layer.name}:`, error);
-               reject(error);
-             };
-             img.crossOrigin = 'anonymous';
-             img.src = layer.url;
-           });
+        const pxToMm = 25.4 / 96;
+        const widthMm = img.width * pxToMm;
+        const heightMm = img.height * pxToMm;
+        const maxWidthMm = pdfWidth - (2 * sideMargin);
 
-           // Convert image dimensions from px to mm (assuming 96 DPI)
-           const pxToMm = 25.4 / 96;
-           const originalWidthMm = img.width * pxToMm;
-           const originalHeightMm = img.height * pxToMm;
+        let finalWidth = widthMm;
+        let finalHeight = heightMm;
+        if (widthMm > maxWidthMm) {
+          const scale = maxWidthMm / widthMm;
+          finalWidth = maxWidthMm;
+          finalHeight = heightMm * scale;
+        }
 
-           // Maximum width allowed (accounting for margins)
-           const maxWidthMm = pdfWidth - (2 * sideMargin);
+        if (currentY + finalHeight > maxHeight) {
+          pdf.addPage();
+          currentY = 20;
+        }
 
-           // Calculate final dimensions
-           let finalWidth = originalWidthMm;
-           let finalHeight = originalHeightMm;
-
-           // Only scale down if width exceeds maximum
-           if (originalWidthMm > maxWidthMm) {
-             const scale = maxWidthMm / originalWidthMm;
-             finalWidth = maxWidthMm;
-             finalHeight = originalHeightMm * scale;
-           }
-
-           // Check if we need to start a new page
-           if (currentY + finalHeight > maxHeight) {
-             pdf.addPage();
-             currentY = 20;
-           }
-
-           // Add legend image
-           pdf.addImage(
-             img,
-             'PNG',
-             sideMargin,
-             currentY,
-             finalWidth,
-             finalHeight
-           );
-
-           currentY += finalHeight + 15; // Add spacing after legend
-         } catch (error) {
-           console.error(`Error processing legend for ${layer.name}:`, error);
-         }
-       }
-     }
-   }
+        pdf.addImage(img, 'PNG', sideMargin, currentY, finalWidth, finalHeight);
+        currentY += finalHeight + 15;
+      } catch (error) {
+        console.error(`Error processing legend for ${layer.name}:`, error);
+      }
+    }
+  }
+}
 
    // Save PDF and restore background layer state
    pdf.save(`${title.value || 'map'}.pdf`);
