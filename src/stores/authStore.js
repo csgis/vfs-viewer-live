@@ -20,7 +20,8 @@ export const useAuthStore = defineStore('auth', {
     authHeaders: (state) => ({
       'Authorization': `Bearer ${state.token}`,
       'Content-Type': 'application/json'
-    })
+    }),
+    username: (state) => state.user?.username || ''
   },
 
   actions: {

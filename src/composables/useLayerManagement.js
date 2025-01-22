@@ -1,6 +1,6 @@
 import { ref, watch } from 'vue'
 
-import { API_BASE_URL } from '../config/api'
+import { API_BASE_URL } from '../config'
 import ImageLayer from 'ol/layer/Image'
 import ImageWMS from 'ol/source/ImageWMS'
 import OSM from 'ol/source/OSM'

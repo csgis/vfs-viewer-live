@@ -72,7 +72,7 @@
     <!-- Render the item's icon only if the user is authenticated -->
     <component 
         v-if="authStore.isAuthenticated || !item.requiresAuth"
-        :is="item.icon" 
+        :is="typeof item.icon === 'function' ? item.icon() : item.icon"
         :class="[
             'w-5 h-5',
             isExpanded ? 'mr-3' : ''
@@ -154,7 +154,7 @@
   import { useUIStore } from '../stores/uiStore'
   import { useAuthStore } from '../stores/authStore'
   import { 
-    HomeIcon, MapIcon, DocumentIcon, UserIcon 
+    HomeIcon, MapIcon, DocumentIcon, UserIcon, ArrowRightOnRectangleIcon
   } from '@heroicons/vue/24/outline'
   import TooltipButton from './TooltipButton.vue'
   
@@ -185,18 +185,23 @@
         requiresAuth: false
     },
     {
-        label: 'Baumarten-Eignungstabelle',
+        label: 'Baumarten Eignungstabelle',
         path: '/baumarteneignungstabelle',
         icon: DocumentIcon,
         requiresAuth: true,
         showLock: true
     },
     {
-        label: () => authStore.isAuthenticated ? 'Abmelden' : 'Anmelden',
+      label: () => authStore.isAuthenticated 
+          ? `${authStore.username} Abmelden` 
+          : 'Anmelden',
         path: '/login',
-        icon: UserIcon,
+        icon: () => authStore.isAuthenticated 
+        ? ArrowRightOnRectangleIcon 
+        : UserIcon,
         requiresAuth: false
     }
+    
 ];
 
   

@@ -56,8 +56,8 @@
                   <div class="p-6  flex items-center">
                     <component :is="MapPinIcon" class="w-12 h-12 mr-6 -400 flex-shrink-0" />
                     <div>
-                      <h3 class="text-xl font-semibold">1.000.000+</h3>
-                      <p class="-300">Kartierte Waldflächen (ha)</p>
+                      <h3 class="text-xl font-semibold">1.000.000+&nbsp;ha</h3>
+                      <p class="-300">kartierte Waldflächen</p>
                     </div>
                   </div>
                 </div>
@@ -82,7 +82,21 @@
           </div>
 
           <div class="bg-white/5    p-6 border border-black/30">
-            <h3 class="text-2xl font-bold  mb-4">VfS Viewer Plus</h3>
+            <div class="flex items-center gap-2">
+            <h3 class="text-2xl font-bold text-green">VfS Viewer Plus</h3>
+            <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            viewBox="0 0 24 24" 
+            fill="currentColor" 
+            class="w-6 h-6 text-green-600"
+          >
+            <path 
+              fill-rule="evenodd" 
+              d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.25 9.75c0 5.942 4.064 10.933 9.563 12.348a.75.75 0 00.374 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 00-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08zm3.094 8.016a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" 
+              clip-rule="evenodd" 
+            />
+          </svg>
+          </div>
             <p class=" mb-4">
              Passwortgeschützter Bereich für Forstzusammenschlüsse und Waldbesitzer mit detaillierten Karten und Baumarten-Eignungstabelle.
             </p>
