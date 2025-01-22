@@ -99,7 +99,7 @@ export function useMapLayers() {
     // Use proxy URL for authenticated layers, direct URL for public layers
     const url = needsAuth 
       ? '/api/geoserver/wms'
-      : 'https://geoserver-vfs.csgis.de/geoserver/wms'
+      :  `${GEOSERVER_URL}/wms`
 
     return new ImageLayer({
       source: new ImageWMS({

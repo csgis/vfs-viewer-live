@@ -9,5 +9,14 @@ module.exports = {
         rewrite: (path) => path.replace(/^\/geoserver/, '')
       }
     }
+  },
+  chainWebpack: config => {
+    config.plugin('define').tap(args => {
+      const env = args[0]['process.env']
+      if (env && env.NODE_ENV) {
+        delete env.NODE_ENV
+      }
+      return args
+    })
   }
 }

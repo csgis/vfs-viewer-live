@@ -1,6 +1,6 @@
+import { API_BASE_URL, GEOSERVER_URL } from '../config'
 import { ref, watch } from 'vue'
 
-import { API_BASE_URL } from '../config'
 import ImageLayer from 'ol/layer/Image'
 import ImageWMS from 'ol/source/ImageWMS'
 import OSM from 'ol/source/OSM'
@@ -101,7 +101,7 @@ export function useLayerManagement(providedMap = null) {
   const createWMSLayer = (layerName) => {
     const wmsConfig = {
       default: {
-        url: 'https://geoserver-vfs.csgis.de/geoserver/wms',
+        url: `${GEOSERVER_URL}/wms`,
         version: '1.3.0'
       },
       soilNutrients: {
@@ -281,7 +281,7 @@ export function useLayerManagement(providedMap = null) {
     
     const wmsConfig = {
       default: {
-        url: 'https://geoserver-vfs.csgis.de/geoserver/wms',
+        url: `${GEOSERVER_URL}/wms`,
         version: '1.3.0'
       },
       soilNutrients: {
