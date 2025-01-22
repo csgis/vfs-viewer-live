@@ -10,9 +10,8 @@
     "build:staging": "vue-cli-service build --mode staging",
     "build:local-docker": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "deploy:staging": "npm run build:staging && gh-pages -d dist -r https://github.com/csgis/vfs-viewer-dev -b gh-pages -e staging -c \"vfs-viewer-staging.csgis.de\"",
-    "deploy:prod": "npm run build && gh-pages -d dist -r https://github.com/username/repo.git -b gh-pages -e production -c \"cname.prod.example.com\""
-
+    "deploy:staging": "npm run build:staging && gh-pages -d dist -r https://github.com/csgis/vfs-viewer-dev.git -b gh-pages -e staging && echo 'vfs-viewer-staging.csgis.de' > dist/CNAME",
+    "deploy:prod": "npm run build && gh-pages -d dist -r https://github.com/csgis/vfs-viewer-dev.git -b gh-pages -e production && echo 'vfs-viewer.csgis.de' > dist/CNAME"
   },
   "dependencies": {
     "@headlessui/tailwindcss": "^0.2.1",
