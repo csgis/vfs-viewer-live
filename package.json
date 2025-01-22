@@ -9,13 +9,17 @@
     "build": "vue-cli-service build --mode production",
     "build:staging": "vue-cli-service build --mode staging",
     "build:local-docker": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "deploy:staging": "npm run build:staging && gh-pages -d dist -r https://github.com/csgis/vfs-viewer-dev -b gh-pages -e staging -c \"vfs-viewer-staging.csgis.de\"",
+    "deploy:prod": "npm run build && gh-pages -d dist -r https://github.com/username/repo.git -b gh-pages -e production -c \"cname.prod.example.com\""
+
   },
   "dependencies": {
     "@headlessui/tailwindcss": "^0.2.1",
     "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.2.0",
     "core-js": "^3.8.3",
+    "gh-pages": "^6.3.0",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.2",
     "jspdf": "^2.5.2",
