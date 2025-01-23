@@ -58,6 +58,42 @@ html, body {
   z-index: 30;
 }
 
+.bg-yellow {
+  background: yellow;
+}
+
+.bg-yellow-hover {
+  background: rgba(255, 255, 0, 0.839);
+}
+
+.bg-green {
+  background: #56FF02;
+}
+
+.bg-green-hover {
+  background: #4bc70d;
+}
+
+.bg-red {
+  background: #AB2A15;
+}
+
+.bg-red-hover {
+  background: #7f1d0e;
+}
+
+.bg-orange {
+  background: #FFAB00;
+}
+
+.bg-orange-hover {
+  background: #cb8a08;
+}
+
+
+
+
+
 
 @layer utilities {
   @keyframes slide-in-top {

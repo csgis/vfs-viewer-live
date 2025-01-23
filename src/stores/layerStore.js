@@ -41,6 +41,18 @@ export const useLayerStore = defineStore({
           visible: false,
           sourceLayer: 'schutzgebiete:natur'
         },
+        ffh: {
+          visible: false,
+          sourceLayer: 'schutzgebiete:ffh'
+        },
+        vogel: {
+          visible: false,
+          sourceLayer: 'schutzgebiete:vogel'
+        },
+        naturparke: {
+          visible: false,
+          sourceLayer: 'schutzgebiete:naturparke'
+        },
         soilNutrients: {
           visible: false,
           sourceLayer: '0',
@@ -185,12 +197,15 @@ export const useLayerStore = defineStore({
         'trinkwasser',
         'landschaftsschutz',
         'naturschutz',
+        'ffh',
+        'vogel',
+        'naturparke',
         'winterlinde',
+        'regierungsbezirk',
+        'landkreis',
+        'gemeinde',
         'kartiergebiete',
         'soilNutrients',
-        'gemeinde',
-        'landkreis',
-        'regierungsbezirk'
       ],
       layerOpacities: {},
       expandedLegends: {},

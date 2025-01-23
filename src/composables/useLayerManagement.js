@@ -36,6 +36,9 @@ export function useLayerManagement(providedMap = null) {
     trinkwasser: 'schutzgebiete:twsg',
     landschaftsschutz: 'schutzgebiete:landschafts',
     naturschutz: 'schutzgebiete:natur',
+    vogel: 'schutzgebiete:vogel',
+    ffh: 'schutzgebiete:ffh',
+    naturparke: 'schutzgebiete:naturparke',
     soilNutrients: '0',
     alkisParzellarkarte: 'by_alkis_parzellarkarte_farbe',
     standorte: 'Standorte', 
@@ -52,6 +55,9 @@ export function useLayerManagement(providedMap = null) {
       trinkwasser: 'Trinkwasserschutzgebiete',
       landschaftsschutz: 'Landschaftsschutzgebiete',
       naturschutz: 'Naturschutzgebiete',
+      ffh: 'Fauna-Flora-Habitat',
+      vogel: 'Vogelschutzgebiete',
+      naturparke: 'Naturparke',
       alkisParzellarkarte: 'ALKIS Parzellarkarte',
       standorte: 'Standorte',
       bergahorn: 'Bergahorn',
@@ -498,7 +504,7 @@ export function useLayerManagement(providedMap = null) {
     )
     
     const nonProtectedLayers = layerOrder.value.filter(name => 
-      !['trinkwasser', 'landschaftsschutz', 'naturschutz'].includes(name)
+      !['trinkwasser', 'landschaftsschutz', 'naturschutz', 'vogel','ffh','naturparke'].includes(name)
     )
 
     nonProtectedLayers.forEach((layerName, index) => {

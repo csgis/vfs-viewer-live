@@ -378,7 +378,7 @@
           >
             <template #item="{ element: layerName }">
               <div 
-                v-if="['trinkwasser', 'landschaftsschutz', 'naturschutz'].includes(layerName)"
+                v-if="['trinkwasser', 'landschaftsschutz', 'naturschutz', 'vogel', 'naturparke', 'ffh'].includes(layerName)"
                 class="space-y-1 p-2 bg-white hover:bg-gray-100 rounded transition-colors"
               >
                 <div class="flex flex-col space-y-2">
@@ -607,6 +607,9 @@ const layerInfo = {
         trinkwasser: 'Quelle: VFS-München; Trinkwasserschutz Gebiete',
         landschaftsschutz: 'Quelle: VFS-München; Landschaftsschutz Gebiete',
         naturschutz: 'Quelle: VFS-München; Naturschutz Gebiete',
+        vogel: 'Quelle: VFS-München; Vogelschutz Gebiete',
+        naturparke: 'Quelle: VFS-München; Naturparke',
+        ffh: 'Quelle: VFS-München; Fauna-Flora-Habitat-Gebiet',
         soilNutrients: '',
         alkisParzellarkarte: 'Quelle: https://geodatenonline.bayern.de; Der ALKIS®-Parzellarkarte-WMS ist nach dem Vorbild der ALKIS®-Flurkarte gebaut, beinhaltet aber Objekte der Flurkarte ohne Flurstücksnummern, ohne Grenzzeichen und ohne Unterscheidung der Grenzen, mit Gebäuden, Lagebezeichnungen und TN-Objekten.',
         standorte: 'Quelle: VFS-München; Detaillayer zu einzelnen Waldbesitzer Standorten',

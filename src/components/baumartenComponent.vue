@@ -373,33 +373,47 @@ const getTooltipText = (column, value) => {
 // Fetch data
 const fetchData = async () => {
   try {
-    const response = await authStore.fetchWithAuth('/api/baumarten/all')
-    baumarten.value = response
-    kartiergebiete.value = getUniqueKartiergebiete(response)
-    standorte.value = getUniqueStandorte(response)
+    console.log("Starting fetchData");
+    const endpoint = selectedKartiergebiet.value 
+      ? `/api/baumarten/filtered/${selectedKartiergebiet.value.kartiergebiet_id}`
+      : '/api/baumarten/base';
+      
+    console.log("Using endpoint:", endpoint);
+    const response = await authStore.fetchWithAuth(endpoint);
+    
+    baumarten.value = response;
+    kartiergebiete.value = getUniqueKartiergebiete(response);
+    standorte.value = getUniqueStandorte(response);
+    
+    console.log("Processed data:", {
+      baumarten: baumarten.value.length,
+      kartiergebiete: kartiergebiete.value.length,
+      standorte: standorte.value.length
+    });
   } catch (error) {
-    console.error('Error fetching baumarten:', error)
+    console.error('Error fetching baumarten:', error);
   }
 }
 
 // Computed
+// Computed
 const filteredData = computed(() => {
-  let filtered = baumarten.value
-
-  if (selectedKartiergebiet.value) {
-    filtered = filtered.filter(item => 
-      item.kartiergebiet_id === selectedKartiergebiet.value.kartiergebiet_id
-    )
-  }
-
+  let filtered = baumarten.value;
+  
   if (selectedStandorte.value.length > 0) {
-    filtered = filtered.filter(item => 
-      selectedStandorte.value.some(s => s.sto_ges === item.sto_ges)
-    )
+    filtered = filtered.filter(item => {
+      const matches = selectedStandorte.value.some(s => s.sto_ges === item.sto_ges);
+      console.log("Standorte filter:", {
+        rowStoGes: item.sto_ges, 
+        selectedStoGes: selectedStandorte.value.map(s => s.sto_ges),
+        matches
+      });
+      return matches;
+    });
   }
-
-  return filtered
-})
+  
+  return filtered;
+});
 
 // Helper functions
 const getUniqueKartiergebiete = (data) => {
@@ -417,7 +431,12 @@ const getUniqueKartiergebiete = (data) => {
 
 const getUniqueStandorte = (data) => {
   const unique = new Map()
-  data.forEach(item => {
+  // Only include standorte for the selected kartiergebiet, or all if none selected
+  const relevantData = selectedKartiergebiet.value 
+    ? data.filter(item => item.kartiergebiet_id === selectedKartiergebiet.value.kartiergebiet_id)
+    : data;
+    
+  relevantData.forEach(item => {
     if (item.sto_ges && !unique.has(item.sto_ges)) {
       unique.set(item.sto_ges, {
         sto_ges: item.sto_ges,
@@ -462,12 +481,21 @@ const isStandortDisabled = computed(() => selectedKartiergebiet.value !== null)
 // Cell formatting
 const getCellClass = (value) => {
   if (!value || value === '-') return 'bg-gray-100'
-  const [suitability] = value.split('/')
   
-  switch(suitability) {
-    case '1': return 'bg-green-200 hover:bg-green-300'
-    case '2': return 'bg-yellow-200 hover:bg-yellow-300'
-    case '3': return 'bg-red-200 hover:bg-red-300'
+  switch(value) {
+    case '1/1': return 'bg-green hover:bg-green-hover'
+    case '1/2': return 'bg-green hover:bg-green-hover'
+    case '2/1': return 'bg-green hover:bg-green-hover'
+
+    case '1/3': return 'bg-yellow hover:bg-yellow-hover'
+    case '2/2': return 'bg-yellow hover:bg-yellow-hover'
+    case '3/1': return 'bg-yellow hover:bg-yellow-hover'
+
+    case '2/3': return 'bg-orange hover:bg-orange-hover'
+    case '3/2': return 'bg-orange hover:bg-orange-hover'
+
+    case '3/3': return 'bg-red text-white hover:bg-red-hover'
+
     default: return ''
   }
 }
@@ -611,19 +639,19 @@ const resetSelections = (except) => {
   }
 }
 
-// Watchers
 watch(selectedKartiergebiet, (newValue) => {
   if (newValue !== null) {
-    resetSelections('kartiergebiet')
+    resetSelections('kartiergebiet');
   }
-}, { deep: true })
+  fetchData();
+}, { deep: true });
 
-watch(selectedStandorte, () => {
-  standortQuery.value = ''
-})
+
+
 
 // Lifecycle hooks
 onMounted(() => {
+  console.log("table Component mounted");
   uiStore.hideMapSidebar()
   fetchData()
 
