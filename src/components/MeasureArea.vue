@@ -1,6 +1,6 @@
 <template>
   <div v-if="active">
-    <div class="fixed top-4 left-1/2 -translate-x-1/2 bg-white p-4 rounded-lg shadow-lg z-50">
+    <div class="fixed top-4 right-4 bg-yellow-200 text-black p-4 rounded-lg shadow-lg z-50 animate-slide-in-top">
       {{ message }}
     </div>
   </div>

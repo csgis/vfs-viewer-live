@@ -129,7 +129,6 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('mapSettings')
       localStorage.removeItem('refreshToken')
       localStorage.removeItem('tokenExpiry') 
-
     },
 
     startRefreshTimer() {

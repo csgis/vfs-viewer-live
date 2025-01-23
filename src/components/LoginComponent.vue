@@ -101,6 +101,8 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import {useToast} from 'vue-toast-notification';
+import 'vue-toast-notification/dist/theme-sugar.css';
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -110,6 +112,7 @@ const password = ref('')
 const rememberMe = ref(false)
 const error = ref('')
 const isLoading = ref(false)
+const $toast = useToast();
 
 const handleLogin = async () => {
   error.value = ''
@@ -128,7 +131,8 @@ const handleLogin = async () => {
     } else {
       console.log('No map extent provided by server')
     }
-
+   
+    $toast.success('Sie haben sich angemeldet');
     router.push('/')
   } catch (err) {
     console.error('Login error details:', err.detail)

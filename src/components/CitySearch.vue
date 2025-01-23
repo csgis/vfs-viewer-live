@@ -1,13 +1,13 @@
 <template>
     <div v-if="active">
-      <div class="fixed top-4 left-1/2 -translate-x-1/2 bg-white p-4 rounded-lg shadow-lg z-50 w-96">
+        <div class="fixed top-4 right-4 bg-yellow-200 text-black p-4 rounded-lg shadow-lg z-50 animate-slide-in-top w-96">
         <div class="relative">
           <!-- Search Input -->
           <input 
             type="text"
             v-model="searchQuery"
             placeholder="Stadt suchen..."
-            class="w-full p-2 border border-gray-300 rounded-lg pr-10"
+            class="w-full p-2 border border-gray-300  pr-10"
           />
           
           <!-- Clear/Close Button -->

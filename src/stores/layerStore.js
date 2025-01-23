@@ -155,6 +155,12 @@ export const useLayerStore = defineStore({
           protected: true,
           needsBearer: true
         },
+        digitale_flurkarte: { 
+          visible: false,
+          sourceLayer: 'vfs-baselayers:by_alkis_flurkarte_umr_gelb',
+          protected: true,
+          needsBearer: true
+        },
       },
 
       protectedLayers: ['soilNutrients', 'standorte', 'vfs:standorte'],
@@ -162,6 +168,7 @@ export const useLayerStore = defineStore({
       legends: {},
       layerOrder: [
         'standorte',
+        'digitale_flurkarte',
         'bergahorn',
         'buche',
         'douglasie',

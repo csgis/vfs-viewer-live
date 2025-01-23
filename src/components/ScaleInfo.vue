@@ -34,10 +34,7 @@
   
   const updateScale = () => {
       const resolution = props.map.getView().getResolution();
-      const dpi = 25.4 / 0.28;  // OpenLayers assumes 96 DPI
-      const mpu = props.map.getView().getProjection().getMetersPerUnit();
-      const calculatedScale = resolution * mpu * 39.37 * dpi;
-      scale.value = Math.round(calculatedScale);
+      scale.value = Math.round(resolution * 39.37 * 72);
   };
   
   // Event handlers

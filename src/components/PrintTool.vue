@@ -1,11 +1,11 @@
 //PrintTool.vue
 <template>
     <div v-if="active">
-      <div class="fixed top-4 left-1/2 -translate-x-1/2 bg-white p-4 rounded-lg shadow-lg z-50">
+      <div class="fixed top-4 right-4 bg-yellow-200 text-black p-4 rounded-lg shadow-lg z-50 animate-slide-in-top">
         {{ message }}
       </div>
   
-      <div v-if="showSettings" class="fixed left-4 bottom-4 bg-white rounded-lg shadow-lg z-50">
+      <div v-if="showSettings" class="fixed right-4 top-24 bg-white rounded-lg shadow-lg z-50 w-96 animate-slide-in-top">
         <div class="p-4">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold">Druckeinstellungen</h3>

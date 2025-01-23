@@ -1,0 +1,23 @@
+https://vfs-backend-staging.csgis.de {
+    log {
+        output stdout
+        format console
+        level DEBUG
+    }
+
+    handle /api/* {
+        reverse_proxy api-backend:81
+    }
+
+    handle /geoserver* {
+        reverse_proxy geoserver:8080
+        header Access-Control-Allow-Origin {http.request.header.Origin}
+        header Access-Control-Allow-Methods "GET, POST, OPTIONS"
+        header Access-Control-Allow-Headers "*"
+        header Vary Origin
+    }
+
+    handle /* {
+        reverse_proxy viewer:80
+    }
+}

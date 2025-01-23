@@ -65,7 +65,8 @@ export function useLayerManagement(providedMap = null) {
       kirsche: 'Kirsche',
       schwarzerle: 'Schwarzerle',
       tanne: 'Tanne',
-      winterlinde: 'Winterlinde'
+      winterlinde: 'Winterlinde',
+      digitale_flurkarte: 'Digitale Flurkarte',
     }
     return labels[layerName] || layerName
   }
@@ -113,6 +114,10 @@ export function useLayerManagement(providedMap = null) {
         version: '1.3.0'
       },
       standorte: {
+        url: `${API_BASE_URL}/api/geoserver/wms`,
+        version: '1.3.0'
+      },
+      digitale_flurkarte: {
         url: `${API_BASE_URL}/api/geoserver/wms`,
         version: '1.3.0'
       }

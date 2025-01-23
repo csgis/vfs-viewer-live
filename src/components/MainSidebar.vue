@@ -157,7 +157,10 @@
     HomeIcon, MapIcon, DocumentIcon, UserIcon, ArrowRightOnRectangleIcon
   } from '@heroicons/vue/24/outline'
   import TooltipButton from './TooltipButton.vue'
-  
+  import {useToast} from 'vue-toast-notification';
+  import 'vue-toast-notification/dist/theme-bootstrap.css';
+
+  const $toast = useToast();
   const router = useRouter()
   const route = useRoute()
   const uiStore = useUIStore()
@@ -215,6 +218,8 @@
     console.log('Handling logout')
     authStore.logout()
     router.push('/')
+    $toast.success('Sie haben sich abgemeldet!');
+
     return
   }
   

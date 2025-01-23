@@ -1,12 +1,12 @@
 <template>
-  <div class="relative h-full overflow-auto">
+  <div class="relative min-h-screen flex items-center overflow-auto -translate-y-20">
     <div class="fixed inset-0 z-0">
       <!-- <img 
         src="/img/forst.jpg" 
         alt="Forest Soil Survey" 
         class="w-full h-full object-cover filter opacity-20"
       /> -->
-      <div class="absolute inset-0 bg-gray-50"></div>
+      <div class="absolute inset-0 bg-gray-100"></div>
     </div>
     
     <div class="container mx-auto px-12 pt-8 relative z-10 mt-5 ">
@@ -32,10 +32,7 @@
                 </h3>
                 <div class="space-y-4">
                   <p class=" leading-relaxed">
-                    Die Arbeit der Forstlichen Standortserkundung besteht aus einer Bodenfeinkartierung im Wald, die 
-                    unter Berücksichtigung weiterer Standortsfaktoren wie Klima, Vegetation, Relief, Geologie
-                    und menschliche Einflüsse eine Bewertung des Standorts im Hinblick auf die forstliche Nutzung 
-                    vornimmt und in einer „Forstlichen Standortskarte" darstellt.
+                    Die forstliche Standortserkundung erstellt detaillierte Bodenkarten des Waldes. Dabei werden alle wichtigen Standortfaktoren berücksichtigt: Klima, Vegetation, Relief, Geologie sowie menschliche Einflüsse. Diese umfassende Analyse wird in der Forstlichen Standortskarte dokumentiert und dient als Grundlage für die nachhaltige Waldbewirtschaftung.
                   </p>
                   <p class=" leading-relaxed">
                     Ziel ist die Erstellung detaillierter Standortskarten und Baumarteneignungstabellen für eine nachhaltige Waldwirtschaft.
@@ -53,6 +50,7 @@
                       <p class="-300">Kartierprojekte</p>
                     </div>
                   </div>
+                  
                   <div class="p-6  flex items-center">
                     <component :is="MapPinIcon" class="w-12 h-12 mr-6 -400 flex-shrink-0" />
                     <div>

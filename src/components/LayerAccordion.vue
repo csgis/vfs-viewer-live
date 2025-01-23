@@ -98,7 +98,8 @@
               'stieleiche',
               'tanne',
               'traubeneiche',
-              'winterlinde'
+              'winterlinde',
+              'digitale_flurkarte'
         ].includes(layerName)"
             class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors relative"
             :class="{ 
@@ -246,7 +247,7 @@
 
           <template #item="{ element: layerName }">
             <div 
-            v-if="['flurkartenSchnitt', 'alkisParzellarkarte','kartiergebiete', 'gemeinde', 'landkreis', 'regierungsbezirk'].includes(layerName)"
+            v-if="['flurkartenSchnitt', 'kartiergebiete', 'gemeinde', 'landkreis', 'regierungsbezirk'].includes(layerName)"
             class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors"
   :class="{ 'bg-blue-100 hover:bg-blue-100': layers[layerName]?.visible }"
 >
@@ -609,6 +610,7 @@ const layerInfo = {
         soilNutrients: '',
         alkisParzellarkarte: 'Quelle: https://geodatenonline.bayern.de; Der ALKIS®-Parzellarkarte-WMS ist nach dem Vorbild der ALKIS®-Flurkarte gebaut, beinhaltet aber Objekte der Flurkarte ohne Flurstücksnummern, ohne Grenzzeichen und ohne Unterscheidung der Grenzen, mit Gebäuden, Lagebezeichnungen und TN-Objekten.',
         standorte: 'Quelle: VFS-München; Detaillayer zu einzelnen Waldbesitzer Standorten',
+        digitale_flurkarte: 'Quelle: https://geodatenonline.bayern.de; Der Layer beinhaltet Flurstücke mit Flurstücksnummern und Grenzzeichen, Gebäude, Bauwerke und Bauteile ohne die Tatsächliche Nutzung. In der Gelb-Darstellung werden Flächen nicht ausgefüllt sondern nur Konturen in gelb dargestellt. Dieser Layer dient zur Überlagerung mit anderen Informationen. Die Darstellung ist für den Maßstab 1:1000 optimiert.',
         bergahorn: 'Quelle: VFS-München; Detailansicht der Baumart',
         buche: 'Quelle: VFS-München; Detailansicht der Baumart',
         douglasie: 'Quelle: VFS-München; Detailansicht der Baumart',

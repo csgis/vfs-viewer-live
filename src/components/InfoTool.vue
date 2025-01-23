@@ -3,8 +3,8 @@
     <!-- Message Modal (for initial message or errors) -->
     <div 
       v-if="(!featureInfo.length && message) || isLoading" 
-      class="fixed top-4 left-1/2 -translate-x-1/2 bg-white p-4 rounded-lg shadow-lg z-50"
-    >
+      class="fixed top-4 right-4 bg-yellow-200 text-black p-4 rounded-lg shadow-lg z-50 animate-slide-in-top"
+      >
       <div>
         <p>{{ message }}</p>
         <div v-if="isLoading" class="mt-2">
@@ -83,7 +83,7 @@ import { ref, computed, defineProps, toRaw, onMounted, onUnmounted } from 'vue';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import { Vector as VectorLayer } from 'ol/layer';
-import { Style, Circle as CircleStyle, Fill, Stroke } from 'ol/style';
+import { Style, Icon } from 'ol/style';
 import { useUIStore } from '../stores/uiStore';
 import { useLayerStore } from '../stores/layerStore';
 import { 
@@ -93,11 +93,16 @@ import {
 } from 'ol/source';
 import { useAuthStore } from '../stores/authStore'
 
+
 import { 
   isKeyBlacklisted, 
   translateKey, 
   transformValue 
 } from './feature-info-config';
+
+const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#FFD700" width="60" height="60" stroke="black" stroke-width="0.5">
+  <path d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
+</svg>`;
 
 const props = defineProps({
   map: Object
@@ -108,7 +113,7 @@ const uiStore = useUIStore();
 const featureInfo = ref([]);
 const currentIndex = ref(0);
 const active = ref(true);
-const message = ref('Klicken Sie auf die Karte, um Informationen anzuzeigen');
+const message = ref('Klicken Sie auf die Karte, um Informationen abzufragen');
 const isLoading = ref(false);
 const lastClickCoordinate = ref(null);
 const authStore = useAuthStore()
@@ -132,20 +137,15 @@ const initializeMarkerLayer = () => {
   markerLayer = new VectorLayer({
     source: markerSource,
     style: new Style({
-      image: new CircleStyle({
-        radius: 24,
-        fill: new Fill({
-          color: 'rgba(255, 255, 0, 0.5)'  // Yellow with transparency
-        }),
-        stroke: new Stroke({
-          color: '#000000',  // Black outline
-          width: 3
-        })
+      image: new Icon({
+        src: 'data:image/svg+xml,' + encodeURIComponent(iconSvg),
+        scale: 1,
+        anchor: [0.5, 1]
       })
     }),
     zIndex: 1000
   });
-  
+    
   props.map.addLayer(markerLayer);
   console.log('Marker layer added to map'); // Debug log
 };
@@ -247,6 +247,7 @@ const filteredProperties = computed(() => {
 const hardcodedFormats = {
   "https://services.bgr.de": "geo+json",
   "https://geoserver-vfs.csgis.de": "json",
+  "https://vfs-backend-staging.csgis.de/": "json",
   "else": "json",
 };
 
