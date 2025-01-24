@@ -16,7 +16,7 @@
     <!-- Results Modal (for showing feature info when available) -->
     <div 
   v-if="featureInfo.length > 0 && !isLoading" 
-  class="fixed left-0 h-full w-1/4 bg-white shadow-lg z-50 border-right border-gray-700 flex flex-col"
+  class="fixed left-0 h-full w-1/3 bg-white shadow-lg z-50 border-right border-gray-700 flex flex-col modal-left-yellow"
 >
   <!-- Header -->
   <div class="p-4 border-b border-gray-200">

@@ -111,3 +111,7 @@ html, body {
     animation: slide-in-top 0.3s ease-out forwards;
   }
 }
+
+.modal-left-yellow {
+  border-left: 30px solid #FFD700;
+}
