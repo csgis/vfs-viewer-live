@@ -5,7 +5,7 @@
       ref="mapElement" 
       :class="`absolute inset-0 transition-all duration-300 ${
         !uiStore.isMapSidebarVisible ? 'ml-12' :  // just main nav (3rem)
-        uiStore.mapSidebarExpanded ? 'ml-[calc(3rem+25%-2%)]' : ''  // Adjusted for exact alignment
+        uiStore.mapSidebarExpanded ? 'ml-[calc(3rem+25%-3%)]' : ''  // Adjusted for exact alignment
       }`"
     ></div>
 
@@ -308,7 +308,7 @@ export default {
       const zoomControl = document.querySelector('.ol-zoom');
       if (zoomControl) {
         const mainSidebarWidth = uiStore.mainSidebarExpanded ? '25vw' : '3rem';
-        const mapSidebarWidth = uiStore.isMapSidebarVisible && uiStore.mapSidebarExpanded ? '25vw' : '3rem';
+        const mapSidebarWidth = uiStore.isMapSidebarVisible && uiStore.mapSidebarExpanded ? '25vw' : '1rem';
         const totalOffset = `calc(${mainSidebarWidth} + ${mapSidebarWidth} + 0.5rem)`;
         zoomControl.style.setProperty('left', totalOffset, 'important');
       }
