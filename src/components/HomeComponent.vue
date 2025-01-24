@@ -1,5 +1,5 @@
 <template>
-  <div class="relative min-h-screen flex items-center overflow-auto -translate-y-20">
+  <div class="relative min-h-screen flex items-center overflow-auto">
     <div class="fixed inset-0 z-0">
       <!-- <img 
         src="/img/forst.jpg" 
@@ -9,7 +9,7 @@
       <div class="absolute inset-0 bg-gray-100"></div>
     </div>
     
-    <div class="container mx-auto px-12 pt-8 relative z-10 mt-5 ">
+    <div class="container mx-auto px-12 relative z-10 ">
       <div class="max-w-6xl mx-auto space-y-4">
         <!-- Header -->
         <div class="text-center ">
