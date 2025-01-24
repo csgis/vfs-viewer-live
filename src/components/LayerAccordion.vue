@@ -169,8 +169,8 @@
                     type="range" 
                     min="0" 
                     max="100" 
-                    v-model="layerOpacities[layerName]" 
-                    @input="updateLayerOpacity(layerName)"
+                    v-model="layerOpacities[layerName]"
+                    @input="(event) => updateLayerOpacity(layerName, event.target.value)"
                     class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                   >
                   <span class="text-xs text-gray-500 w-8">{{ layerOpacities[layerName] }}%</span>
@@ -317,8 +317,8 @@
           type="range" 
           min="0" 
           max="100" 
-          v-model="layerOpacities[layerName]" 
-          @input="updateLayerOpacity(layerName)"
+          v-model="layerOpacities[layerName]"
+          @input="(event) => updateLayerOpacity(layerName, event.target.value)"
           class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
         >
         <span class="text-xs text-gray-500 w-8">{{ layerOpacities[layerName] }}%</span>
@@ -427,8 +427,8 @@
                         type="range" 
                         min="0" 
                         max="100" 
-                        v-model="layerOpacities[layerName]" 
-                        @input="updateLayerOpacity(layerName)"
+                        :value="layerOpacities[layerName] ?? 100"
+                        @input="event => updateLayerOpacity(layerName, event.target.value)"
                         class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                       >
                       <span class="text-xs text-gray-500 w-8">{{ layerOpacities[layerName] }}%</span>

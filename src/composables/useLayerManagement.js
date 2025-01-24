@@ -84,11 +84,11 @@ export function useLayerManagement(providedMap = null) {
 
 
 
-  const updateLayerOpacity = (layerName) => {
-    layerStore.setLayerOpacity(layerName, layerOpacities.value[layerName])
+  const updateLayerOpacity = (layerName, value) => {
+    layerStore.setLayerOpacity(layerName, value)
     const layer = wmsLayers.get(layerName)
     if (layer) {
-      layer.setOpacity(layerOpacities.value[layerName] / 100)
+      layer.setOpacity(value / 100)
     }
   }
 

@@ -404,7 +404,9 @@ const layerDefinitions = {
         'kartiergebiete',
         'soilNutrients',
       ],
-      layerOpacities: {},
+      layerOpacities: Object.fromEntries(
+        Object.keys(layerDefinitions).map(layerName => [layerName, 100])
+      ),
       expandedLegends: {},
       legendSizes: {}
     }
