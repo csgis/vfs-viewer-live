@@ -411,6 +411,24 @@ const layerDefinitions = {
   },
 
   getters: {
+    getLegendUrl: (state) => (layerName) => {
+      const layer = state.layers[layerName];
+      if (!layer) return null;
+      
+      const { wmsConfig, sourceLayer, style } = layer;
+      if (!wmsConfig || !sourceLayer) return null;
+  
+      const params = {
+        REQUEST: 'GetLegendGraphic',
+        VERSION: wmsConfig.version,
+        FORMAT: 'image/png',
+        LAYER: sourceLayer,
+        STYLE: style || '',
+        TRANSPARENT: true
+      };
+  
+      return `${wmsConfig.url}?${new URLSearchParams(params)}`;
+    },
     getLayerLabel: (state) => (layerName) => state.layers[layerName]?.label || layerName,
     getLayerSource: (state) => (layerName) => state.layers[layerName]?.sourceLayer,
     getLayerWmsConfig: (state) => (layerName) => state.layers[layerName]?.wmsConfig,

@@ -491,36 +491,18 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-        <div v-show="openSections.background" class="p-3 border-t border-gray-300 px-3 py-3">
-          <div class="space-y-2">
-            <!-- Existing background options -->
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="background" value="none" v-model="selectedBackground" @change="changeBackground">
-              <span>Kein Hintergrund</span>
-            </label>
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="background" value="luftbilder" v-model="selectedBackground" @change="changeBackground">
-              <span>Luftbilder WMS DOP 20</span>
-            </label>
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="background" value="osm" v-model="selectedBackground" @change="changeBackground">
-              <span>Open Street Map</span>
-            </label>
-
-            
-            <!-- Vector tile options -->
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="background" value="vectorColor" v-model="selectedBackground" @change="changeBackground">
-              <span>Basemap.de Vektor (Farbe)</span>
-            </label>
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="background" value="vectorRelief" v-model="selectedBackground" @change="changeBackground">
-              <span>Basemap.de Vektor (Relief)</span>
-            </label>
-            <label class="flex items-center space-x-2">
-              <input type="radio" name="background" value="vectorGrey" v-model="selectedBackground" @change="changeBackground">
-              <span>Basemap.de Vektor (Grau)</span>
-            </label>
+        <div v-show="openSections.background" class="p-3 border-t border-gray-300">
+        <div class="space-y-2">
+          <label v-for="(config, type) in backgroundStore.backgroundDefinitions" 
+                :key="type" 
+                class="flex items-center space-x-2">
+            <input type="radio" 
+                  name="background" 
+                  :value="type" 
+                  v-model="selectedBackground" 
+                  @change="() => backgroundStore.changeBackground(type, props.map)">
+            <span>{{ config.label }}</span>
+          </label>
           </div>
         </div>
       </div>
@@ -545,6 +527,10 @@ import { ref, watch, onUnmounted, defineProps } from 'vue'
 import { useLayerManagement } from '../composables/useLayerManagement'
 import draggable from 'vuedraggable'
 import { useAuthStore } from '../stores/authStore'
+import { useBackgroundStore } from '../stores/backgroundStore'
+import { storeToRefs } from 'pinia'
+const backgroundStore = useBackgroundStore()
+const { selectedBackground } = storeToRefs(backgroundStore)
 
 const props = defineProps({
   map: {
@@ -557,13 +543,10 @@ const {
   layers,
   legends,
   layerOrder,
-  selectedBackground,
   getLayerLabel,
   toggleLayer,
-  changeBackground,
   updateLayerZIndices,
   wmsLayers,
-  activeBackgroundLayer,
   layerOpacities,
   updateLayerOpacity,
   isLayerAvailable
@@ -678,14 +661,6 @@ const updateTooltipPosition = (event, layerName) => {
   }
 }
 
-// Initialize layers when map is available
-watch(() => props.map, (newMap) => {
-  if (newMap && layers.value) {
-    if (selectedBackground.value !== 'none') {
-      changeBackground()
-    }
-  }
-}, { immediate: true })
 
 watch(
   () => authStore.isAuthenticated,
@@ -698,9 +673,6 @@ watch(
 // Cleanup on unmount
 onUnmounted(() => {
   if (props.map) {
-    if (activeBackgroundLayer.value) {
-      props.map.removeLayer(activeBackgroundLayer.value)
-    }
     wmsLayers.forEach(layer => {
       props.map.removeLayer(layer)
     })

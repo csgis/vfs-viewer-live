@@ -2,45 +2,22 @@ import { ref, watch } from 'vue'
 
 import ImageLayer from 'ol/layer/Image'
 import ImageWMS from 'ol/source/ImageWMS'
-import OSM from 'ol/source/OSM'
 import TileLayer from 'ol/layer/Tile'
-import TileWMS from 'ol/source/TileWMS'
-import XYZ from 'ol/source/XYZ'
-import { apply as applyMapboxStyle } from 'ol-mapbox-style'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '../stores/authStore'
 import { useLayerStore } from '../stores/layerStore'
-import { useUIStore } from '../stores/uiStore'
 
 export function useLayerManagement(providedMap = null) {
   const layerStore = useLayerStore()
-  const uiStore = useUIStore()
   const authStore = useAuthStore()
   const map = ref(providedMap)
   
   const { layers, legends, layerOrder, layerOpacities } = storeToRefs(layerStore)
   
-  const selectedBackground = ref('luftbilder')
   const wmsLayers = new Map()
-  const backgroundLayers = ref({})
-  const activeBackgroundLayer = ref(null)
   const initialized = ref(false)
 
-  const vectorStyles = {
-    vectorColor: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_col.json',
-    vectorRelief: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_top.json',
-    vectorGrey: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json'
-  }
 
-  const getAttributionForBackground = (type) => {
-    const attributions = {
-      none: '',
-      osm: '© OpenStreetMap contributors',
-      luftbilder: '© Bayerische Vermessungsverwaltung',
-      terrain: '© tiles.stadiamaps.com'
-    }
-    return attributions[type] || ''
-  }
 
   const cleanupLayer = (layerName) => {
     if (!map.value) return
@@ -105,58 +82,7 @@ export function useLayerManagement(providedMap = null) {
     })
   }
 
-  const createBackgroundLayer = async (type) => {
-    if (type === 'none') return null
 
-    if (vectorStyles[type]) {
-      try {
-        const dummyLayer = new TileLayer({
-          source: new OSM(),
-          visible: false
-        })
-        
-        await applyMapboxStyle(map.value, vectorStyles[type])
-        return dummyLayer
-      } catch (error) {
-        console.error('Error creating vector tile layer:', error)
-        return null
-      }
-    }
-
-    const sources = {
-      osm: () => new OSM({
-        crossOrigin: 'anonymous',
-        wrapX: false,
-      }),
-      terrain: () => new XYZ({
-        url: 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}.png',
-        crossOrigin: 'anonymous',
-        maxZoom: 18
-      }),
-      luftbilder: () => new TileWMS({
-        url: 'https://geoservices.bayern.de/od/wms/dop/v1/dop20',
-        params: {
-          'LAYERS': 'by_dop20c',
-          'FORMAT': 'image/png',
-          'VERSION': '1.3.0'
-        },
-        crossOrigin: 'anonymous',
-        wrapX: false
-      })
-    }
-
-    if (!sources[type]) return null
-
-    return new TileLayer({
-      source: sources[type](),
-      zIndex: 0,
-      visible: true,
-      properties: {
-        type: 'background',
-        name: type
-      }
-    })
-  }
 
   const updateLayerOpacity = (layerName) => {
     layerStore.setLayerOpacity(layerName, layerOpacities.value[layerName])
@@ -374,70 +300,21 @@ export function useLayerManagement(providedMap = null) {
     layerStore.updateLayerOrder(layerOrder.value)
   }
 
-  const unloadAllBackgroundLayers = () => {
-    if (!map.value) {
-      console.warn('No map available to unload background layers')
-      return
-    }
-    
-    const layers = map.value.getLayers()
-    const layersArray = layers.getArray()
-    for (let i = layersArray.length - 1; i >= 0; i--) {
-      const layer = layersArray[i]
-      if (layer instanceof TileLayer) {
-        map.value.removeLayer(layer)
-      }
-    }
-  
-    if (activeBackgroundLayer.value) {
-      activeBackgroundLayer.value = null
-    }
-    backgroundLayers.value = {}
-  }
-
-  const changeBackground = async () => {
-    try {
-      unloadAllBackgroundLayers()
-      uiStore.setMapAttribution(getAttributionForBackground(selectedBackground.value))
-
-      if (selectedBackground.value !== 'none') {
-        const layer = await createBackgroundLayer(selectedBackground.value)
-        if (layer) {
-          backgroundLayers.value[selectedBackground.value] = layer
-          activeBackgroundLayer.value = layer
-          map.value.addLayer(layer)
-        }
-      }
-    } catch (error) {
-      console.error('Error changing background:', error)
-    }
-  }
-
 
 
   const cleanup = () => {
     initialized.value = false
-    
-    // Only try to remove layers if map exists
     if (map.value) {
-      // Remove all layers from the map
       const mapLayers = map.value.getLayers().getArray()
       mapLayers.forEach(layer => {
-        map.value.removeLayer(layer)
+        if (layer.getSource() instanceof ImageWMS) {
+          map.value.removeLayer(layer)
+        }
       })
-      
-      // Clean up WMS layers
       wmsLayers.forEach((layer, layerName) => {
         cleanupLayer(layerName)
       })
       wmsLayers.clear()
-      
-      // Reset background layers
-      try {
-        unloadAllBackgroundLayers()
-      } catch (error) {
-        console.warn('Error unloading background layers:', error)
-      }
     }
   }
 
@@ -468,17 +345,13 @@ export function useLayerManagement(providedMap = null) {
     layers,
     legends,
     layerOrder,
-    selectedBackground,
     getLayerLabel: layerStore.getLayerLabel,
     toggleLayer,
-    changeBackground,
     updateLayerZIndices,
     wmsLayers,
-    activeBackgroundLayer,
     layerOpacities,
     updateLayerOpacity,
     getLegendUrl,
-    vectorStyles,
     isLayerAvailable: (layerName) => !layerStore.isLayerProtected(layerName) || authStore.isAuthenticated,
     cleanup,
     initializeLayers,

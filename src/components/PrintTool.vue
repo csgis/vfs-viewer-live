@@ -69,11 +69,13 @@
 <script setup>
 import { ref } from 'vue';
 import jsPDF from 'jspdf';
-import { useLayerManagement } from '../composables/useLayerManagement';
 import { useLayerStore } from '../stores/layerStore';
 import { useUIStore } from '../stores/uiStore';
-import { storeToRefs } from 'pinia';
 import { useAuthStore } from '../stores/authStore'
+import { storeToRefs } from 'pinia';
+
+const layerStore = useLayerStore();
+const { layers } = storeToRefs(layerStore);
 
 const props = defineProps({
   map: {
@@ -91,11 +93,7 @@ const includeLegends = ref(true);
 const authStore = useAuthStore()
 
 // Get layer management functions and state
-const layerManagement = useLayerManagement();
-const { getLayerLabel, getLegendUrl, activeBackgroundLayer } = layerManagement;
-const layerStore = useLayerStore();
 const uiStore = useUIStore();
-const { layers } = storeToRefs(layerStore);
 
 const handleClose = () => {
   showSettings.value = false;
@@ -110,7 +108,9 @@ const generateAndDownloadPDF = async () => {
 
  try {
    // Store original background layer visibility and z-index
-   const backgroundLayer = activeBackgroundLayer.value
+   const backgroundLayers = props.map.getLayers().getArray()
+    .filter(layer => layer.get('isBackground'));
+    const backgroundLayer = backgroundLayers[0];
    const originalZIndex = backgroundLayer?.getZIndex()
    const originalVisibility = backgroundLayer?.getVisible()
 
@@ -203,12 +203,12 @@ const generateAndDownloadPDF = async () => {
 
    if (includeLegends.value) {
     const visibleLayers = Object.entries(layers.value)
-      .filter(([, layer]) => layer.visible === true)
-      .map(([name]) => ({
-        name,
-        url: getLegendUrl(name),
-        label: getLayerLabel(name)
-      }));
+    .filter(([, layer]) => layer.visible === true)
+    .map(([name]) => ({
+      name,
+      url: layerStore.getLegendUrl(name), // Use store method
+      label: layerStore.getLayerLabel(name)
+    }));
 
   if (visibleLayers.length > 0) {
     pdf.addPage();

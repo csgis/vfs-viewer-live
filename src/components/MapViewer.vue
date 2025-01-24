@@ -254,7 +254,9 @@ import MapAttribution from './MapAttribution.vue';
 import ScaleInfo from './ScaleInfo.vue';
 import MeasureRadius from './MeasureRadius.vue';
 import { useRoute } from 'vue-router'
+import { useBackgroundStore } from '../stores/backgroundStore'
 
+const backgroundStore = useBackgroundStore()
 
 export default {
   name: 'MapViewer',
@@ -322,13 +324,6 @@ export default {
       // Trigger a resize event to update the map size
       if (map.value) {
         map.value.updateSize();
-      }
-    });
-
-    watch(() => map.value, (newMap) => {
-      if (newMap) {
-        const { changeBackground } = useLayerManagement(newMap);
-        changeBackground('luftbilder', newMap);
       }
     });
 
@@ -505,19 +500,22 @@ const initializeMap = () => {
     };
 
     onMounted(() => {
-      uiStore.showMapSidebar(); // Initialize with map sidebar visible
+      uiStore.showMapSidebar();
       initializeMap();
-      setTimeout(updateZoomControlPosition, 100);
+      setTimeout(updateZoomControlPosition, 10);
+      backgroundStore.ensureBackground(map.value);
     });
 
     onUnmounted(() => {
       cleanupMap();
+      backgroundStore.cleanup(map.value)
     });
 
     onActivated(() => {
       if (!map.value) {
         initializeMap();
       }
+      backgroundStore.ensureBackground(map.value);
     });
 
     onDeactivated(() => {
