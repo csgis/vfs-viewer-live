@@ -183,17 +183,17 @@
           PDF Export
         </button>
         <button
-          @click="exportCSV"
-          class="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition inline-flex items-center"
-          :disabled="isCsvExporting"
-        >
-          <ArrowPathIcon 
-            v-if="isCsvExporting" 
-            class="h-4 w-4 mr-1 animate-spin" 
-            aria-hidden="true" 
-          />
-          CSV Export
-        </button>
+        @click="exportXLSX"
+        class="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition inline-flex items-center"
+        :disabled="isXlSExporting"
+      >
+        <ArrowPathIcon 
+          v-if="isXlSExporting" 
+          class="h-4 w-4 mr-1 animate-spin" 
+          aria-hidden="true" 
+        />
+        Excel Export
+      </button>
       </div>
     </div>
 
@@ -223,7 +223,7 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="item in filteredData" :key="item.sto_ges" class="hover:bg-gray-50">
-              <td class="px-3 py-2 text-xs whitespace-nowrap font-medium">
+              <td class="px-3 py-1 text-xs whitespace-nowrap font-medium">
                 {{ item.sto_ges }}
               </td>
               <td class="px-3 py-2 text-xs w-96">
@@ -284,6 +284,9 @@
 import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
 import { useAuthStore } from '../stores/authStore'
 import { useUIStore } from '../stores/uiStore'
+import ExcelJS from 'exceljs';
+
+
 import { 
   Combobox,
   ComboboxInput,
@@ -308,7 +311,7 @@ const showEditDialog = ref(false)
 const currentEdit = ref({ item: null, column: null })
 const newValue = ref('')
 const isPdfExporting = ref(false)
-const isCsvExporting = ref(false)
+const isXlSExporting = ref(false)
 const activeCombobox = ref(null)
 const standortQuery = ref('')
 
@@ -395,7 +398,6 @@ const fetchData = async () => {
   }
 }
 
-// Computed
 // Computed
 const filteredData = computed(() => {
   let filtered = baumarten.value;
@@ -536,97 +538,237 @@ const saveEdit = async () => {
 }
 
 // Export functionality
+const shortenTreeName = (name) => {
+  const shortNames = {
+    'FICHTE': 'Fi',
+    'TANNE': 'Ta',
+    'ELA': 'ELa',
+    'DOUGLASIE': 'Do',
+    'KIEFER': 'Ki',
+    'BUCHE': 'Bu',
+    'BERGAHORN': 'BAh',
+    'ESCHE': 'Es',
+    'WINTERLINDE': 'WLi',
+    'SCHWARZERLE': 'SEr',
+    'EICHE': 'Ei',
+    'kiefer': 'Ki',
+    'TRAUBENEICHE': 'TEi',
+    'STIELEICHE': 'SEi'
+  };
+  return shortNames[name] || name;
+};
+
 const exportPDF = async () => {
-  isPdfExporting.value = true
-  const element = document.querySelector('table')
-  
-  const currentDate = new Date()
-  const dateStr = currentDate.toLocaleDateString('de-DE').replace(/\./g, '-')
-  const timeStr = currentDate.toLocaleTimeString('de-DE').replace(/:/g, '-')
-  const filename = `baumarten_${authStore.user?.username || 'unknown'}_${dateStr}_${timeStr}.pdf`
-  
-  const wrapper = document.createElement('div')
-  wrapper.style.width = '100%'
-  
-  const header = document.createElement('div')
-  header.innerHTML = `
-    <h1 style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">Baumarten</h1>
-    <div style="font-size: 10px; margin-bottom: 16px;">
-      <div>Benutzer: ${authStore.user?.username || 'Unbekannt'}</div>
-      <div>Datum: ${currentDate.toLocaleDateString('de-DE')}</div>
-    </div>
-  `
-  
-  wrapper.appendChild(header)
-  const tableClone = element.cloneNode(true)
-  
-  tableClone.style.width = '100%'
-  tableClone.style.fontSize = '8px'
-  tableClone.style.borderCollapse = 'collapse'
-  
-  const cells = tableClone.querySelectorAll('td, th')
-  cells.forEach(cell => {
-    cell.style.border = '1px solid #ddd'
-    cell.style.padding = '4px'
-    cell.style.textAlign = 'left'
-    cell.style.verticalAlign = 'middle'
-    cell.style.height = '20px'
-  })
-  
-  wrapper.appendChild(tableClone)
-
-  const opt = {
-    margin: [10, 5, 10, 5],
-    filename: filename,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { 
-      scale: 2,
-      logging: false,
-      windowWidth: wrapper.scrollWidth
-    },
-    jsPDF: { 
-      unit: 'mm', 
-      format: 'a4', 
-      orientation: 'landscape',
-      compress: true
-    },
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-  }
+  isPdfExporting.value = true;
   
   try {
-    await html2pdf().set(opt).from(wrapper).save()
+    const currentDate = new Date();
+    const dateStr = currentDate.toLocaleDateString('de-DE').replace(/\./g, '-');
+    const timeStr = currentDate.toLocaleTimeString('de-DE').replace(/:/g, '-');
+    const filename = `baumarten_${authStore.user?.username || 'unknown'}_${dateStr}_${timeStr}.pdf`;
+
+    const tableHTML = `
+      <div style="font-family: helvetica">
+        <h1 style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">Baumarten</h1>
+        <div style="font-size: 9px; margin-bottom: 16px;">
+          <div>Benutzer: ${authStore.user?.username || 'Unbekannt'}</div>
+          <div>Datum: ${currentDate.toLocaleDateString('de-DE')}</div>
+        </div>
+        <table style="width: 100%; font-size: 8px; border-collapse: collapse; page-break-inside: auto;">
+          <thead style="background-color: #f9fafb;">
+            <tr>
+              <th style="text-align: left; padding: 4px; border: 1px solid #ddd; vertical-align: middle; font-weight: 500;">Standort</th>
+              <th style="text-align: left; padding: 4px; border: 1px solid #ddd; font-weight: 500;">Bezeichnung</th>
+              ${treeColumns.map(col => 
+                `<th style="text-align: left; padding: 4px; border: 1px solid #ddd; font-weight: 500;">${shortenTreeName(col)}</th>`
+              ).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredData.value.map(item => `
+              <tr style="page-break-inside: avoid;">
+                <td style="padding: 4px; border: 1px solid #ddd;">${item.sto_ges}</td>
+                <td style="padding: 4px; border: 1px solid #ddd;">${item.sto_name}</td>
+                ${treeColumns.map(col => {
+                  const value = item[col.toLowerCase()];
+                  const bgColor = getCellBackgroundColor(value);
+                  const textColor = value === '3/3' ? '#ffffff' : '#000000';
+                  return `<td style="padding: 4px; border: 1px solid #ddd; background-color: ${bgColor}; color: ${textColor};">${value || '-'}</td>`;
+                }).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    const opt = {
+      margin: [10, 5, 10, 5],
+      filename: filename,
+      html2canvas: { 
+        scale: 2,
+        logging: false
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'landscape',
+        compress: true,
+        fontSize: 8,
+        putOnlyUsedFonts: true
+      },
+      pagebreak: { 
+        mode: 'avoid-all',
+        before: '.page-break'
+      }
+    };
+
+    const element = document.createElement('div');
+    element.innerHTML = tableHTML;
+    document.body.appendChild(element);
+
+    await html2pdf().set(opt).from(element).save();
+    document.body.removeChild(element);
   } catch (error) {
-    console.error('Error generating PDF:', error)
+    console.error('Error generating PDF:', error);
   } finally {
-    isPdfExporting.value = false
+    isPdfExporting.value = false;
   }
-}
+};
 
-const exportCSV = () => {
-  isCsvExporting.value = true
+
+const getCellBackgroundColor = (value) => {
+  if (!value || value === '-') return '#f3f4f6';
+  
+  switch(value) {
+    case '1/1':
+    case '1/2':
+    case '2/1':
+      return '#56FF02'; // green
+
+    case '1/3':
+    case '2/2':
+    case '3/1':
+      return 'yellow'; // yellow
+
+    case '2/3':
+    case '3/2':
+      return '#FFAB00'; // orange
+
+    case '3/3':
+      return '#AB2A15'; // red
+
+    default:
+      return '#ffffff';
+  }
+};
+
+
+const exportXLSX = async () => {
+  isXlSExporting.value = true;
   try {
-    const currentDate = new Date()
-    const dateStr = currentDate.toLocaleDateString('de-DE').replace(/\./g, '-')
-    const timeStr = currentDate.toLocaleTimeString('de-DE').replace(/:/g, '-')
-    const filename = `baumarten_${authStore.user?.username || 'unknown'}_${dateStr}_${timeStr}.csv`
-
-    const headers = ['sto_ges', ...treeColumns.map(col => col.toLowerCase())]
-    const csvContent = [
-      headers.join(','),
-      ...filteredData.value.map(item => 
-        headers.map(header => item[header] || '').join(',')
-      )
-    ].join('\n')
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Baumarten');
     
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = filename
-    link.click()
+    // Headers
+    worksheet.columns = [
+      { header: 'Standort', width: 15 },
+      { header: 'Bezeichnung', width: 40 },
+      ...treeColumns.map(() => ({ width: 8 }))
+    ];
+
+    // Add data
+    filteredData.value.forEach(item => {
+      const row = worksheet.addRow([
+        item.sto_ges,
+        item.sto_name,
+        ...treeColumns.map(col => item[col.toLowerCase()] || '-')
+      ]);
+
+      // Apply cell styles
+      row.eachCell((cell, colNumber) => {
+        if (colNumber > 2) {
+          const value = cell.value;
+          if (!value || value === '-') {
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFF3F4F6' }
+            };
+          } else {
+            switch(value) {
+              case '1/1':
+              case '1/2':
+              case '2/1':
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FF56FF02' }
+                };
+                break;
+              case '1/3':
+              case '2/2':
+              case '3/1':
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFFFFF00' }
+                };
+                break;
+              case '2/3':
+              case '3/2':
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFFFAB00' }
+                };
+                break;
+              case '3/3':
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFAB2A15' }
+                };
+                cell.font = {
+                  color: { argb: 'FFFFFFFF' }
+                };
+                break;
+            }
+          }
+        }
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+        cell.alignment = { vertical: 'middle', horizontal: 'left' };
+      });
+    });
+
+    // Style header row
+    worksheet.getRow(1).font = { bold: true };
+    
+    const currentDate = new Date();
+    const dateStr = currentDate.toLocaleDateString('de-DE').replace(/\./g, '-');
+    const timeStr = currentDate.toLocaleTimeString('de-DE').replace(/:/g, '-');
+    const filename = `baumarten_${authStore.user?.username || 'unknown'}_${dateStr}_${timeStr}.xlsx`;
+
+    // Write to buffer and create blob
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    
+    // Download file
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+  } catch (error) {
+    console.error('Error generating XLSX:', error);
   } finally {
-    isCsvExporting.value = false
+    isXlSExporting.value = false;
   }
-}
+};
 
 // State reset
 const resetSelections = (except) => {

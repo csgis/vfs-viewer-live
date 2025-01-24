@@ -1,4 +1,3 @@
-import { API_BASE_URL, GEOSERVER_URL } from '../config'
 import { ref, watch } from 'vue'
 
 import ImageLayer from 'ol/layer/Image'
@@ -27,54 +26,10 @@ export function useLayerManagement(providedMap = null) {
   const activeBackgroundLayer = ref(null)
   const initialized = ref(false)
 
-  const layerSources = {
-    flurkartenSchnitt: 'admin_boundaries:flurkarte',
-    regierungsbezirk: 'admin_boundaries:regierungsbezirke',
-    landkreis: 'admin_boundaries:landkreise',
-    gemeinde: 'admin_boundaries:gemeinden',
-    kartiergebiete: 'vfs:kartiergebiete',
-    trinkwasser: 'schutzgebiete:twsg',
-    landschaftsschutz: 'schutzgebiete:landschafts',
-    naturschutz: 'schutzgebiete:natur',
-    vogel: 'schutzgebiete:vogel',
-    ffh: 'schutzgebiete:ffh',
-    naturparke: 'schutzgebiete:naturparke',
-    soilNutrients: '0',
-    alkisParzellarkarte: 'by_alkis_parzellarkarte_farbe',
-    standorte: 'Standorte', 
-  }
-
-  const getLayerLabel = (layerName) => {
-    const labels = {
-      flurkartenSchnitt: 'Flurkartenschnitt 1:5.000',
-      regierungsbezirk: 'Regierungsbezirk',
-      landkreis: 'Landkreis',
-      gemeinde: 'Gemeinde',
-      kartiergebiete: 'Kartiergebiete des VFS',
-      soilNutrients: 'Boden Typ',
-      trinkwasser: 'Trinkwasserschutzgebiete',
-      landschaftsschutz: 'Landschaftsschutzgebiete',
-      naturschutz: 'Naturschutzgebiete',
-      ffh: 'Fauna-Flora-Habitat',
-      vogel: 'Vogelschutzgebiete',
-      naturparke: 'Naturparke',
-      alkisParzellarkarte: 'ALKIS Parzellarkarte',
-      standorte: 'Standorte',
-      bergahorn: 'Bergahorn',
-      buche: 'Buche',
-      douglasie: 'Douglasie',
-      eiche: 'Eiche',
-      ela: 'Europäische Lärche',
-      esche: 'Esche',
-      fichte: 'Fichte',
-      kiefer: 'Kiefer',
-      kirsche: 'Kirsche',
-      schwarzerle: 'Schwarzerle',
-      tanne: 'Tanne',
-      winterlinde: 'Winterlinde',
-      digitale_flurkarte: 'Digitale Flurkarte',
-    }
-    return labels[layerName] || layerName
+  const vectorStyles = {
+    vectorColor: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_col.json',
+    vectorRelief: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_top.json',
+    vectorGrey: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json'
   }
 
   const getAttributionForBackground = (type) => {
@@ -98,91 +53,27 @@ export function useLayerManagement(providedMap = null) {
     }
   }
 
-
-  Object.keys(layers.value).forEach(layerName => {
-    if (layerOpacities.value[layerName] === undefined) {
-      layerStore.setLayerOpacity(layerName, 100)
-    }
-  })
-
   const createWMSLayer = (layerName) => {
-    const wmsConfig = {
-      default: {
-        url: `${GEOSERVER_URL}/wms`,
-        version: '1.3.0'
-      },
-      soilNutrients: {
-        url: 'https://services.bgr.de/wms/boden/buek1000de/',
-        version: '1.3.0'
-      },
-      alkisParzellarkarte: { 
-        url: 'https://geoservices.bayern.de/od/wms/alkis/v1/parzellarkarte',
-        version: '1.3.0'
-      },
-      standorte: {
-        url: `${API_BASE_URL}/api/geoserver/wms`,
-        version: '1.3.0'
-      },
-      digitale_flurkarte: {
-        url: `${API_BASE_URL}/api/geoserver/wms`,
-        version: '1.3.0'
-      }
-    }
-  
-    // Get the source layer to determine the correct WMS configuration
-    const sourceLayer = layerStore.getLayerSource(layerName)
-    let style = layerStore.getLayerStyle(layerName)
+    const layerConfig = layerStore.layers[layerName]
+    const wmsConfig = layerStore.getLayerWmsConfig(layerName)
     
-    // Create a unique identifier for the layer combining source and style
-    const layerKey = style ? `${sourceLayer}_${style}` : sourceLayer
-    
-    // If this layer is using 'standorte' as its source, use the standorte WMS config
-    const config = sourceLayer === 'vfs:standorte' 
-      ? wmsConfig.standorte 
-      : (wmsConfig[layerName] || wmsConfig.default)
-  
-    const zIndexMap = {
-      regierungsbezirk: 1,
-      landkreis: 2,
-      gemeinde: 3,
-      soilNutrients: 4,
-      kartiergebiete: 5,
-      alkisParzellarkarte: 6,
-      flurkartenSchnitt: 7,
-      bergahorn: 8,
-      buche: 9,
-      douglasie: 10,
-      eiche: 11,
-      ela: 12,
-      esche: 13,
-      fichte: 14,
-      kiefer: 15,
-      kirsche: 16,
-      schwarzerle: 17,
-      tanne: 18,
-      standorte: 19,
-    }
-  
-    const zIndex = zIndexMap[layerName] || 5
-  
     let sourceConfig = {
-      url: config.url,
+      url: wmsConfig.url,
       params: {
-        'LAYERS': layerSources[sourceLayer] || sourceLayer,
+        'LAYERS': layerConfig.sourceLayer,
         'FORMAT': 'image/png',
         'TRANSPARENT': true,
-        'VERSION': config.version
+        'VERSION': wmsConfig.version
       },
       crossOrigin: 'anonymous',
       ratio: 1,
       wrapX: false
     }
-  
-    if (style) {
-      sourceConfig.params['STYLES'] = style
+
+    if (layerConfig.style) {
+      sourceConfig.params['STYLES'] = layerConfig.style
     }
-  
-    // Add auth headers for protected layers
+
     if (layerStore.layerNeedsBearer(layerName)) {
       sourceConfig = {
         ...sourceConfig,
@@ -202,24 +93,16 @@ export function useLayerManagement(providedMap = null) {
         }
       }
     }
-  
-    const layer = new ImageLayer({
+
+    return new ImageLayer({
       source: new ImageWMS(sourceConfig),
-      zIndex: zIndex,
+      zIndex: layerConfig.zIndex,
       opacity: layerOpacities.value[layerName] / 100,
       properties: {
         name: layerName,
-        layerKey: layerKey
+        layerKey: layerConfig.style ? `${layerConfig.sourceLayer}_${layerConfig.style}` : layerConfig.sourceLayer
       }
     })
-  
-    return layer
-  }
-  
-  const vectorStyles = {
-    vectorColor: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_col.json',
-    vectorRelief: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_top.json',
-    vectorGrey: 'https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json'
   }
 
   const createBackgroundLayer = async (type) => {
@@ -284,58 +167,27 @@ export function useLayerManagement(providedMap = null) {
   }
 
   const getLegendUrl = (layerName) => {
+    const layerConfig = layerStore.layers[layerName]
+    const wmsConfig = layerStore.getLayerWmsConfig(layerName)
+
+    if (!layerConfig || !wmsConfig) return null
+
     if (layerName === 'alkisParzellarkarte') {
       return 'https://geodaten.bayern.de/wms/legend/legende_alkis_parzellarkarte_umr.png'
     }
-  
-    const needsAuth = layerStore.layerNeedsBearer(layerName) 
-    
-    const wmsConfig = {
-      default: {
-        url: `${GEOSERVER_URL}/wms`,
-        version: '1.3.0'
-      },
-      soilNutrients: {
-        url: 'https://services.bgr.de/wms/boden/buek1000de/',
-        version: '1.3.0'
-      },
-      alkisParzellarkarte: {
-        url: 'https://geoservices.bayern.de/od/wms/alkis/v1/parzellarkarte',
-        version: '1.3.0'
-      },
-      standorte: {
-        url: `${API_BASE_URL}/api/geoserver/wms`,
-        version: '1.3.0'
-      }
-    }
-  
-    // Get the source layer and style
-    const sourceLayer = layerStore.getLayerSource(layerName)
-    const style = layerStore.getLayerStyle(layerName)
-    
-    // If this layer is using 'standorte' as its source, use the standorte WMS config
-    const config = sourceLayer === 'vfs:standorte' 
-      ? wmsConfig.standorte 
-      : (wmsConfig[layerName] || wmsConfig.default)
-  
-    const baseUrl = needsAuth
-      ? `${API_BASE_URL}/api/geoserver/wms`
-      : config.url
-  
-    const version = config.version
+
     const params = new URLSearchParams({
       REQUEST: 'GetLegendGraphic',
-      VERSION: version,
+      VERSION: wmsConfig.version,
       FORMAT: 'image/png',
-      LAYER: layerSources[sourceLayer] || sourceLayer
+      LAYER: layerConfig.sourceLayer
     })
-  
-    // Add style parameter if specified
-    if (style) {
-      params.append('STYLE', style)
+
+    if (layerConfig.style) {
+      params.append('STYLE', layerConfig.style)
     }
-    
-    return `${baseUrl}?${params.toString()}`
+
+    return `${wmsConfig.url}?${params.toString()}`
   }
   
   const loadLegend = async (layerName) => {
@@ -494,9 +346,7 @@ export function useLayerManagement(providedMap = null) {
   }
 
 
-  const isLayerAvailable = (layerName) => {
-    return !layerStore.isLayerProtected(layerName) || authStore.isAuthenticated
-  }
+
 
   const updateLayerZIndices = () => {
     const protectedLayers = layerOrder.value.filter(name => 
@@ -619,18 +469,17 @@ export function useLayerManagement(providedMap = null) {
     legends,
     layerOrder,
     selectedBackground,
-    getLayerLabel,
+    getLayerLabel: layerStore.getLayerLabel,
     toggleLayer,
     changeBackground,
     updateLayerZIndices,
     wmsLayers,
     activeBackgroundLayer,
-    layerSources,
     layerOpacities,
     updateLayerOpacity,
     getLegendUrl,
     vectorStyles,
-    isLayerAvailable,
+    isLayerAvailable: (layerName) => !layerStore.isLayerProtected(layerName) || authStore.isAuthenticated,
     cleanup,
     initializeLayers,
     map

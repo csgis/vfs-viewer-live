@@ -321,69 +321,66 @@ const makeGetFeatureInfoRequest = async (evt) => {
 };
 
 const queryLayerForFeatureInfo = async (layer, coordinate, projection, layerUrl, layerVersion, layersParam) => {
+ const layerStore = useLayerStore();
 
-  const layerStore = useLayerStore();
+ // Find the actual layer name that corresponds to this source layer
+ const layerName = Object.keys(layerStore.layers).find(
+   name => layerStore.getLayerSource(name) === layersParam
+ );
 
-  try {
-    layersQueried.push({ layerUrl, layersParam, layerName: layersParam });
+ try {
+   layersQueried.push({ layerUrl, layersParam, layerName: layersParam });
 
-    const formatKey = Object.keys(hardcodedFormats).find(key => layerUrl.includes(key)) || "else";
-    const infoFormat = `application/${hardcodedFormats[formatKey]}`;
+   const formatKey = Object.keys(hardcodedFormats).find(key => layerUrl.includes(key)) || "else";
+   const infoFormat = `application/${hardcodedFormats[formatKey]}`;
 
-    const pixel = props.map.getPixelFromCoordinate(coordinate);
-    const size = props.map.getSize();
+   const pixel = props.map.getPixelFromCoordinate(coordinate);
+   const size = props.map.getSize();
 
-    const url = new URL(layerUrl);
-    const params = {
-      'SERVICE': 'WMS',
-      'VERSION': layerVersion,
-      'REQUEST': 'GetFeatureInfo',
-      'FORMAT': 'image/png',
-      'TRANSPARENT': true,
-      'QUERY_LAYERS': layersParam,
-      'LAYERS': layersParam,
-      'INFO_FORMAT': infoFormat,
-      'I': Math.round(pixel[0]),
-      'J': Math.round(pixel[1]),
-      'WIDTH': size[0],
-      'HEIGHT': size[1],
-      'CRS': projection,
-      'BBOX': props.map.getView().calculateExtent().join(',')
-    };
+   const url = new URL(layerUrl);
+   const params = {
+     'SERVICE': 'WMS',
+     'VERSION': layerVersion,
+     'REQUEST': 'GetFeatureInfo',
+     'FORMAT': 'image/png',
+     'TRANSPARENT': true,
+     'QUERY_LAYERS': layersParam,
+     'LAYERS': layersParam,
+     'INFO_FORMAT': infoFormat,
+     'I': Math.round(pixel[0]),
+     'J': Math.round(pixel[1]),
+     'WIDTH': size[0],
+     'HEIGHT': size[1],
+     'CRS': projection,
+     'BBOX': props.map.getView().calculateExtent().join(',')
+   };
 
+   Object.entries(params).forEach(([key, value]) => {
+     url.searchParams.append(key, value);
+   });
 
+   // Check if the layer needs bearer token using the actual layer name
+   const needsBearer = layerName && layerStore.layerNeedsBearer(layerName);
+   const headers = needsBearer ? authStore.authHeaders : {};
 
-    Object.entries(params).forEach(([key, value]) => {
-      url.searchParams.append(key, value);
-    });
+   const response = await fetch(url, { headers });
 
-    // Check if the layer needs bearer token
-    const needsBearer = layerStore.layerNeedsBearer(layersParam);
+   const data = await response.json();
 
-    var headers = {}
-    if (needsBearer) {
-      headers = authStore.authHeaders;
-    }
+   if (data.features?.length > 0) {
+     const featuresWithLayer = data.features.map(feature => ({
+       ...feature,
+       layerName: feature.layerName || layersParam
+     }));
+     featureInfo.value.push(...featuresWithLayer);
+   }
+   uiStore.setInfoPanelVisibility(true);
 
-    const response = await fetch(url, {headers});
-
-    const data = await response.json();
-
-    if (data.features?.length > 0) {
-      const featuresWithLayer = data.features.map(feature => ({
-        ...feature,
-        layerName: feature.layerName || layersParam
-      }));
-      featureInfo.value.push(...featuresWithLayer);
-    }
-    uiStore.setInfoPanelVisibility(true);
-
-  } catch (error) {
-    console.error('GetFeatureInfo request failed:', error);
-    throw error;
-  }
+ } catch (error) {
+   console.error('GetFeatureInfo request failed:', error);
+   throw error;
+ }
 };
-
 
 const prevFeature = () => {
   if (currentIndex.value > 0) {
