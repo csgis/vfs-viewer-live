@@ -8,7 +8,8 @@ export const useUIStore = defineStore('ui', {
       mapSidebarExpanded: true,
       activeControl: null,
       mapAttribution: 'OpenStreetMap contributors',
-      isMapSidebarVisible: true
+      isMapSidebarVisible: true,
+      accessibilityMode: 'default'
     }
   },
 
@@ -19,7 +20,11 @@ export const useUIStore = defineStore('ui', {
         this.activeControl = null
       }
     },
-
+    toggleAccessibilityMode() {
+      const modes = ['default', 'highContrast'];
+      const currentIndex = modes.indexOf(this.accessibilityMode);
+      this.accessibilityMode = modes[(currentIndex + 1) % modes.length];
+    },
     toggleMainSidebar() {
       const isMapPage = window.location.pathname === '/karte'
       if (!isMapPage) {

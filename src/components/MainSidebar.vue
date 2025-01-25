@@ -30,12 +30,13 @@
           isExpanded ? 'p-4' : 'p-2'
         }`"
       >
-        <img 
-          :src="isExpanded ? 'img/vfs-logo-solo-lg.png' : 'img/vfs-logo-solo.png'"
-          alt="Logo" 
-          :class="`object-contain transition-all duration-300 ${
-            isExpanded ? 'h-16 mx-2' : 'h-8 mx-1 mt-5'
-          }`"
+
+      <img 
+        :src="isExpanded ? 'img/vfs-logo-solo-lg.png' : 'img/vfs-logo-solo.png'"
+        alt="Logo" 
+        :class="`object-contain transition-all duration-300 ${
+          isExpanded ? 'h-16 mx-2' : 'h-8 mx-1 mt-5'
+        } ${uiStore.accessibilityMode === 'highContrast' ? 'high-contrast-image' : ''}`"
         />
       </div>
       
@@ -48,20 +49,26 @@
 
 
       <TooltipButton
-    v-for="(item, index) in navigationItems" 
-    :key="index"
-    :tooltip="!isExpanded ? (typeof item.label === 'function' ? item.label() : item.label) : ''"
-    @click="!item.requiresAuth || authStore.isAuthenticated ? handleNavigation(item) : null"
-    :buttonClass="[
-        'w-full text-left mb-2 rounded-lg text-black hover:bg-gray-300 hover:text-black transition-colors relative',
-        currentPath === item.path ? 'bg-gray-300 text-gray-900' : '',
-        isExpanded ? 'p-3' : 'p-2 flex justify-center',
-        item.requiresAuth && !authStore.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
-    ]"
-    position="left"
-    tooltipClass="z-[1000]"
-    :disabled="item.requiresAuth && !authStore.isAuthenticated"
->
+          v-for="(item, index) in navigationItems" 
+          :key="index"
+          :tooltip="!isExpanded ? (typeof item.label === 'function' ? item.label() : item.label) : ''"
+          @click="!item.requiresAuth || authStore.isAuthenticated ? handleNavigation(item) : null"
+          :buttonClass="[
+            'w-full text-left mb-2 rounded-lg transition-colors relative',
+            currentPath === item.path 
+              ? uiStore.accessibilityMode === 'highContrast'
+              ? 'text-white !bg-black'
+                : 'bg-gray-300 text-gray-900'
+              : uiStore.accessibilityMode === 'highContrast'
+                ? 'text-black hover:bg-black hover:text-white'
+                : 'text-black hover:bg-gray-300 hover:text-black',
+            isExpanded ? 'p-3' : 'p-2 flex justify-center',
+            item.requiresAuth && !authStore.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
+          ]"
+          position="left"
+          tooltipClass="z-[1000]"
+          :disabled="item.requiresAuth && !authStore.isAuthenticated"
+        >
     <div 
         :class="[
             'flex items-center',
@@ -110,6 +117,23 @@
 
       </nav>
   
+      <div class="flex items-center  p-4 border-b border-gray-200" v-if="isExpanded">
+        <button
+          @click="uiStore.toggleAccessibilityMode"
+          class="relative inline-flex h-6 w-11 items-center rounded-full"
+          :class="uiStore.accessibilityMode === 'highContrast' ? 'contrast:bg-contrast-primary contrast:text-contrast-primary contrast-hover:bg-contrast-hover' : 'bg-gray-500'"
+        >
+          <span class="sr-only">Farbmodus umschalten</span>
+          <span
+            class="inline-block h-4 w-4 transform rounded-full bg-white transition "
+            :class="uiStore.accessibilityMode === 'highContrast' ? 'translate-x-6' : 'translate-x-1'"
+          />
+        </button>
+        <span class="text-sm text-gray-600 ml-3">
+          {{ uiStore.accessibilityMode === 'highContrast' ? 'Kontrastmodus' : 'Farbmodus' }}
+        </span>
+        </div>
+
       <!-- Footer -->
       <div 
         :class="`border-t border-black transition-all duration-300 ${

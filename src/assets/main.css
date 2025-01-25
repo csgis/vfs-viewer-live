@@ -115,3 +115,44 @@ html, body {
 .modal-left-yellow {
   border-left: 30px solid #FFD700;
 }
+
+.high-contrast-image {
+  filter: grayscale(100%) contrast(200%) brightness(100%);
+ }
+
+
+ [data-contrast="true"] input[type="range"] {
+  background: white !important;
+}
+
+[data-contrast="true"] input[type="range"]::-webkit-slider-thumb {
+  background: white !important;
+  border: 2px solid white !important;
+  border-radius: 0px;
+}
+
+[data-contrast="true"] input[type="range"]::-webkit-slider-runnable-track {
+  background: black !important;
+}
+
+[data-contrast="true"] input[type="checkbox"] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background-color: black;
+  position: relative;
+}
+
+[data-contrast="true"] input[type="checkbox"]:checked {
+  background-color: black;
+}
+
+[data-contrast="true"] input[type="checkbox"]:checked::after {
+  content: "✓";
+  color: white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: bold;
+}

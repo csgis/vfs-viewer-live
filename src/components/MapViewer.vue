@@ -53,124 +53,197 @@
       <!-- Home button -->
       <TooltipButton
         tooltip="Startansicht"
-        buttonClass="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-blue-300 transition-colors border border-gray-300"
+        :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
+          uiStore.accessibilityMode === 'highContrast'
+            ? '!bg-white !border-black hover:!bg-gray-200'
+            : 'bg-white hover:bg-blue-300 border-gray-300'
+        }`"
         @click="zoomHomeRef.zoomToHome()"
-      >
-        <img src="../assets/home.svg" class="h-6 w-6" alt="Home">
-      </TooltipButton>
-
-      <TooltipButton
-          tooltip="Stadt suchen"
-          :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
-            uiStore.activeControl !== 'city-search' 
-              ? 'bg-white hover:bg-blue-300 border-gray-300' 
-              : 'bg-blue-300 hover:bg-blue-400 bg-blue-300 text-white'
-          }`"
-          @click="toggleControl('city-search')"
         >
-        <img src="../assets/search.svg" class="h-6 w-6" alt="Help">
-      </TooltipButton>
+        <img src="../assets/home.svg" class="h-6 w-6" alt="Home">
+        </TooltipButton>
+
+      <!-- City search -->
+      <TooltipButton
+        tooltip="Stadt suchen"
+        :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
+          uiStore.accessibilityMode === 'highContrast'
+            ? uiStore.activeControl === 'city-search'
+              ? '!bg-black !text-white hover:!bg-gray-800'
+              : '!bg-white !border-black hover:!bg-gray-200'
+            : uiStore.activeControl !== 'city-search'
+              ? 'bg-white hover:bg-blue-300 border-gray-300'
+              : 'bg-blue-300 hover:bg-blue-400 bg-blue-300 text-white'
+        }`"
+        @click="toggleControl('city-search')"
+        >
+        <img 
+          src="../assets/search.svg" 
+          :class="`h-6 w-6 ${uiStore.accessibilityMode === 'highContrast' && uiStore.activeControl === 'city-search' ? 'filter invert' : ''}`"
+          alt="Search"
+        >
+        </TooltipButton>
 
       <!-- Help Button -->
       <TooltipButton
         tooltip="Hilfe öffnen"
-        buttonClass="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-lg hover:bg-blue-300 transition-colors border border-gray-300"
+        :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
+          uiStore.accessibilityMode === 'highContrast'
+            ? '!bg-white !border-black hover:!bg-gray-200'
+            : 'bg-white hover:bg-blue-300 border-gray-300'
+        }`"
         @click="helpRef.openHelp()"
-      >
+        >
         <img src="../assets/help.svg" class="h-6 w-6" alt="Help">
-      </TooltipButton>
+        </TooltipButton>
 
       <!-- Navigate Back Button -->
       <TooltipButton
         tooltip="Zurück zur vorherigen Ansicht"
         :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
-          navigateBackRef?.hasHistory
-            ? 'bg-blue-300 hover:bg-blue-400 border-gray-300' 
-            : 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed'
+          uiStore.accessibilityMode === 'highContrast'
+            ? navigateBackRef?.hasHistory
+              ? '!bg-black !text-white hover:!bg-gray-800'
+              : '!bg-gray-200 !border-black opacity-50 cursor-not-allowed'
+            : navigateBackRef?.hasHistory
+              ? 'bg-blue-300 hover:bg-blue-400 border-gray-300'
+              : 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed'
         }`"
         :disabled="!navigateBackRef?.hasHistory"
         @click="navigateBackRef?.goBack"
-      >
-        <img src="../assets/back.svg" class="h-6 w-6" alt="Back">
-      </TooltipButton>
+        >
+        <img 
+          src="../assets/back.svg" 
+          :class="`h-6 w-6 ${uiStore.accessibilityMode === 'highContrast' && navigateBackRef?.hasHistory ? 'filter invert' : ''}`"
+          alt="Back"
+        >
+        </TooltipButton>
 
       <!-- Zoom to Extent Button -->
       <TooltipButton
-        tooltip="Bereich auswählen"
-        :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
-            uiStore.activeControl !== 'zoom-extent' 
-            ? 'bg-white hover:bg-blue-300 border-gray-300' 
-            : 'bg-blue-300 hover:bg-blue-400 bg-blue-400 text-white'
-        }`"
-        @click="toggleControl('zoom-extent')"
-      >
-        <img src="../assets/extent.svg" class="h-6 w-6" alt="Extent">
-      </TooltipButton>
+          tooltip="Bereich auswählen"
+          :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
+            uiStore.accessibilityMode === 'highContrast'
+              ? uiStore.activeControl === 'zoom-extent'
+                ? '!bg-black !text-white hover:!bg-gray-800'
+                : '!bg-white !border-black hover:!bg-gray-200'
+              : uiStore.activeControl !== 'zoom-extent'
+                ? 'bg-white hover:bg-blue-300 border-gray-300'
+                : 'bg-blue-300 hover:bg-blue-400 bg-blue-400 text-white'
+          }`"
+          @click="toggleControl('zoom-extent')"
+          >
+          <img 
+            src="../assets/extent.svg" 
+            :class="`h-6 w-6 ${uiStore.accessibilityMode === 'highContrast' && uiStore.activeControl === 'zoom-extent' ? 'filter invert' : ''}`"
+            alt="Extent"
+          >
+          </TooltipButton>
 
       <!-- Measure Line Button -->
       <TooltipButton
         tooltip="Strecke messen"
         :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
-          uiStore.activeControl !== 'measure-line' 
-            ? 'bg-white hover:bg-blue-300 border-gray-3000' 
-            : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
+          uiStore.accessibilityMode === 'highContrast'
+            ? uiStore.activeControl === 'measure-line'
+              ? '!bg-black !text-white hover:!bg-gray-800'
+              : '!bg-white !border-black hover:!bg-gray-200'
+            : uiStore.activeControl !== 'measure-line'
+              ? 'bg-white hover:bg-blue-300 border-gray-300'
+              : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
         }`"
         @click="toggleControl('measure-line')"
-      >
-        <img src="../assets/line.svg" class="h-6 w-6" alt="Measure Line">
-      </TooltipButton>
+        >
+        <img 
+          src="../assets/line.svg" 
+          :class="`h-6 w-6 ${uiStore.accessibilityMode === 'highContrast' && uiStore.activeControl === 'measure-line' ? 'filter invert' : ''}`"
+          alt="Measure Line"
+        >
+        </TooltipButton>
 
       <!-- Measure Area Button -->
       <TooltipButton
         tooltip="Fläche messen"
         :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
-          uiStore.activeControl !== 'measure-area' 
-            ? 'bg-white hover:bg-blue-300 border-gray-300' 
-            : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
+          uiStore.accessibilityMode === 'highContrast'
+            ? uiStore.activeControl === 'measure-area'
+              ? '!bg-black !text-white hover:!bg-gray-800'
+              : '!bg-white !border-black hover:!bg-gray-200'
+            : uiStore.activeControl !== 'measure-area'
+              ? 'bg-white hover:bg-blue-300 border-gray-300'
+              : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
         }`"
         @click="toggleControl('measure-area')"
-      >
-        <img src="../assets/area.svg" class="h-6 w-6" alt="Measure Area">
-      </TooltipButton>
+        >
+        <img 
+          src="../assets/area.svg" 
+          :class="`h-6 w-6 ${uiStore.accessibilityMode === 'highContrast' && uiStore.activeControl === 'measure-area' ? 'filter invert' : ''}`"
+          alt="Measure Area"
+        >
+        </TooltipButton>
 
       <!-- Measure Radius Button -->
       <TooltipButton
         tooltip="Radius messen"
         :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
-          uiStore.activeControl !== 'measure-radius' 
-            ? 'bg-white hover:bg-blue-300 border-gray-300' 
-            : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
+          uiStore.accessibilityMode === 'highContrast'
+            ? uiStore.activeControl === 'measure-radius'
+              ? '!bg-black !text-white hover:!bg-gray-800'
+              : '!bg-white !border-black hover:!bg-gray-200'
+            : uiStore.activeControl !== 'measure-radius'
+              ? 'bg-white hover:bg-blue-300 border-gray-300'
+              : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
         }`"
         @click="toggleControl('measure-radius')"
-      >
-        <img src="../assets/radius.svg" class="h-6 w-6" alt="Measure Radius">
-      </TooltipButton>
+        >
+        <img 
+          src="../assets/radius.svg" 
+          :class="`h-6 w-6 ${uiStore.accessibilityMode === 'highContrast' && uiStore.activeControl === 'measure-radius' ? 'filter invert' : ''}`"
+          alt="Measure Radius"
+        >
+        </TooltipButton>
 
       <!-- Info Button -->
       <TooltipButton
         tooltip="Karteninhalte abfragen"
         :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
-          uiStore.activeControl !== 'info' 
-            ? 'bg-white hover:bg-blue-300 border-gray-300' 
-            : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
+          uiStore.accessibilityMode === 'highContrast'
+            ? uiStore.activeControl === 'info'
+              ? '!bg-black !text-white hover:!bg-gray-800'
+              : '!bg-white !border-black hover:!bg-gray-200'
+            : uiStore.activeControl !== 'info'
+              ? 'bg-white hover:bg-blue-300 border-gray-300'
+              : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
         }`"
         @click="uiStore.toggleControl('info')"
-      >
-        <img src="../assets/info.svg" class="h-6 w-6" alt="Info">
-      </TooltipButton>
+        >
+        <img 
+          src="../assets/info.svg" 
+          :class="`h-6 w-6 ${uiStore.accessibilityMode === 'highContrast' && uiStore.activeControl === 'info' ? 'filter invert' : ''}`"
+          alt="Info"
+        >
+        </TooltipButton>
 
       <!-- Print Button -->
       <TooltipButton
         tooltip="Karte drucken"
         :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
-          uiStore.activeControl !== 'print' 
-            ? 'bg-white hover:bg-blue-300 border-gray-300' 
-            : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
+          uiStore.accessibilityMode === 'highContrast'
+            ? uiStore.activeControl === 'print'
+              ? '!bg-black !text-white hover:!bg-gray-800'
+              : '!bg-white !border-black hover:!bg-gray-200'
+            : uiStore.activeControl !== 'print'
+              ? 'bg-white hover:bg-blue-300 border-gray-300'
+              : 'bg-blue-300 hover:bg-blue-400 border-blue-400 text-white'
         }`"
         @click="toggleControl('print')"
-      >
-        <img src="../assets/print.svg" class="h-6 w-6" alt="Print">
-      </TooltipButton>
+        >
+        <img 
+          src="../assets/print.svg" 
+          :class="`h-6 w-6 ${uiStore.accessibilityMode === 'highContrast' && uiStore.activeControl === 'print' ? 'filter invert' : ''}`"
+          alt="Print"
+        >
+        </TooltipButton>
     </div>
   
     <!-- Scale Info -->

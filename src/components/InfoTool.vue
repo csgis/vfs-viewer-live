@@ -3,7 +3,7 @@
     <!-- Message Modal (for initial message or errors) -->
     <div 
       v-if="(!featureInfo.length && message) || isLoading" 
-      class="fixed top-4 right-4 bg-yellow-200 text-black p-4 rounded-lg shadow-lg z-50 animate-slide-in-top"
+      class="fixed top-4 right-4 bg-yellow-200 text-black p-4 rounded-lg shadow-lg z-50 animate-slide-in-top contrast:bg-contrast-primary contrast:text-contrast-primary"
       >
       <div>
         <p>{{ message }}</p>

@@ -73,7 +73,7 @@
             </p>
             <router-link 
               to="/karte" 
-              class="inline-block  bg-gray-300  text-black-900 px-6 py-2 hover:bg-gray-400 transition-colors"
+              class="inline-block  bg-gray-300  text-black-900 px-6 py-2 hover:bg-gray-400 transition-colors contrast:bg-contrast-primary contrast:text-contrast-primary contrast:text-contrast-primary contrast-hover:bg-contrast-hover"
             >
               Öffentliche Karte
             </router-link>
@@ -81,12 +81,12 @@
 
           <div class="bg-white/5    p-6 border border-black/30">
             <div class="flex items-center gap-2">
-            <h3 class="text-2xl font-bold text-green">VfS Viewer Plus</h3>
+            <h3 class="text-2xl font-bold text-green ">VfS Viewer Plus</h3>
             <svg 
             xmlns="http://www.w3.org/2000/svg" 
             viewBox="0 0 24 24" 
             fill="currentColor" 
-            class="w-6 h-6 text-green-600"
+            class="w-6 h-6 text-green-600 contrast:bg-contrast-primary contrast:text-contrast-primary"
           >
             <path 
               fill-rule="evenodd" 
@@ -100,7 +100,7 @@
             </p>
             <router-link 
               to="/login" 
-              class="inline-block bg-gray-300  text-black-900  px-6 py-2 hover:bg-gray-400  transition-colors"
+              class="inline-block bg-gray-300  text-black-900  px-6 py-2 hover:bg-gray-400  transition-colors contrast:bg-contrast-primary contrast:text-contrast-primary contrast:text-contrast-primary contrast-hover:bg-contrast-hover"
             >
               Login
             </router-link>

@@ -1,6 +1,6 @@
 <template>
     <div v-if="active">
-        <div class="fixed top-4 right-4 bg-yellow-200 text-black p-4 rounded-lg shadow-lg z-50 animate-slide-in-top w-96">
+        <div class="fixed top-4 right-4 bg-yellow-200 text-black p-4 rounded-lg shadow-lg z-50 animate-slide-in-top w-96  contrast:bg-contrast-primary">
         <div class="relative">
           <!-- Search Input -->
           <input 
@@ -22,11 +22,11 @@
         </div>
   
         <!-- Search Results -->
-        <div v-if="results.length > 0" class="mt-2 max-h-60 overflow-y-auto">
+        <div v-if="results.length > 0" class="mt-2 max-h-60 overflow-y-auto contrast:text-contrast-primary contrast-hover:!bg-contrast-hover">
           <div 
             v-for="result in results" 
             :key="result.place_id"
-            class="p-2 hover:bg-gray-100 cursor-pointer rounded"
+            class="p-2 hover:bg-gray-100 cursor-pointer rounded contrast:text-contrast-primary contrast-hover:!bg-contrast-hover"
             @click="selectLocation(result)"
           >
             {{ result.display_name }}

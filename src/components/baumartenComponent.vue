@@ -172,7 +172,7 @@
       <div class="space-x-2">
         <button
           @click="exportPDF"
-          class="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition inline-flex items-center"
+          class="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition inline-flex items-center contrast:bg-contrast-primary contrast:text-contrast-primary contrast-hover:bg-contrast-hover"
           :disabled="isPdfExporting"
         >
           <ArrowPathIcon 
@@ -184,7 +184,7 @@
         </button>
         <button
         @click="exportXLSX"
-        class="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition inline-flex items-center"
+        class="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition inline-flex items-center contrast:bg-contrast-primary contrast:text-contrast-primary contrast-hover:bg-contrast-hover"
         :disabled="isXlSExporting"
       >
         <ArrowPathIcon 
@@ -230,9 +230,9 @@
                 <div class="break-words">{{ item.sto_name }}</div>
               </td>
               <td v-for="column in treeColumns" :key="column" 
-                  @click="openEditDialog(item, column)"
-                  :class="getCellClass(item[column.toLowerCase()])"
-                  class="px-3 py-2 text-xs whitespace-nowrap cursor-pointer group relative">
+                @click="openEditDialog(item, column)"
+                :class="getCellClass(item[column.toLowerCase()], uiStore.accessibilityMode)"
+                class="px-3 py-2 text-xs whitespace-nowrap cursor-pointer group relative">
                 <span>{{ item[column.toLowerCase()] }}</span>
                 <div class="absolute z-50 invisible group-hover:visible bg-gray-900 text-white text-xs rounded py-1 px-2 -top-8 left-1/2 transform -translate-x-1/2 min-w-max">
                   {{ getTooltipText(column, item[column.toLowerCase()]) }}
@@ -481,26 +481,38 @@ const isKartiergebietDisabled = computed(() => selectedStandorte.value.length > 
 const isStandortDisabled = computed(() => selectedKartiergebiet.value !== null)
 
 // Cell formatting
-const getCellClass = (value) => {
-  if (!value || value === '-') return 'bg-gray-100'
+const getCellClass = (value, mode) => {
+  if (!value || value === '-') return 'bg-gray-100';
   
-  switch(value) {
-    case '1/1': return 'bg-green hover:bg-green-hover'
-    case '1/2': return 'bg-green hover:bg-green-hover'
-    case '2/1': return 'bg-green hover:bg-green-hover'
-
-    case '1/3': return 'bg-yellow hover:bg-yellow-hover'
-    case '2/2': return 'bg-yellow hover:bg-yellow-hover'
-    case '3/1': return 'bg-yellow hover:bg-yellow-hover'
-
-    case '2/3': return 'bg-orange hover:bg-orange-hover'
-    case '3/2': return 'bg-orange hover:bg-orange-hover'
-
-    case '3/3': return 'bg-red text-white hover:bg-red-hover'
-
-    default: return ''
+  if (mode === 'highContrast') {
+    const highContrast = {
+      '1/1': 'bg-white border-1 border-black',
+      '1/2': 'bg-white border-1 border-black',
+      '2/1': 'bg-gray-300',
+      '1/3': 'bg-gray-200',
+      '2/2': 'bg-gray-500 text-white',
+      '3/1': 'bg-gray-400 text-white',
+      '2/3': 'bg-gray-600 text-white',
+      '3/2': 'bg-gray-700 text-white',
+      '3/3': 'bg-black text-white'
+    };
+    return highContrast[value] || '';
   }
-}
+
+  // Default color mode
+  switch(value) {
+    case '1/1':
+    case '1/2':
+    case '2/1': return 'bg-green hover:bg-green-hover';
+    case '1/3':
+    case '2/2':
+    case '3/1': return 'bg-yellow hover:bg-yellow-hover';
+    case '2/3':
+    case '3/2': return 'bg-orange hover:bg-orange-hover';
+    case '3/3': return 'bg-red text-white hover:bg-red-hover';
+    default: return '';
+  }
+};
 
 // Edit functionality
 const openEditDialog = (item, column) => {

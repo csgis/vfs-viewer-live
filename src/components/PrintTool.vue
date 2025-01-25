@@ -1,11 +1,10 @@
-//PrintTool.vue
 <template>
     <div v-if="active">
-      <div class="fixed top-4 right-4 bg-yellow-200 text-black p-4 rounded-lg shadow-lg z-50 animate-slide-in-top">
+      <div class="fixed top-4 right-4 bg-yellow-200 text-black p-4 rounded-lg shadow-lg z-50 animate-slide-in-top  contrast:bg-contrast-primary contrast:text-contrast-primary">
         {{ message }}
       </div>
   
-      <div v-if="showSettings" class="fixed right-4 top-24 bg-white rounded-lg shadow-lg z-50 w-96 animate-slide-in-top">
+      <div v-if="showSettings" class="fixed right-4 top-24 bg-white rounded-lg shadow-lg z-50 w-96 animate-slide-in-top  contrast:bg-contrast-accent">
         <div class="p-4">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-semibold">Druckeinstellungen</h3>
@@ -21,7 +20,7 @@
   
           <div class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700">Titel</label>
+              <label class="block text-sm font-medium text-gray-700 ">Titel</label>
               <input 
                 v-model="title"
                 type="text"
@@ -31,7 +30,7 @@
             </div>
   
             <div>
-              <label class="block text-sm font-medium text-gray-700">Format</label>
+              <label class="block text-sm font-medium text-gray-700 ">Format</label>
               <select 
                 v-model="format"
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -55,7 +54,7 @@
             <div class="pt-4">
               <button
                 @click="generateAndDownloadPDF"
-                class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 contrast:bg-contrast-primary contrast:text-contrast-primary"
               >
                 PDF erstellen
               </button>
