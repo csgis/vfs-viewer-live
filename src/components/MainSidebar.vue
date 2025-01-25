@@ -60,7 +60,7 @@
               ? 'text-white !bg-black'
                 : 'bg-gray-300 text-gray-900'
               : uiStore.accessibilityMode === 'highContrast'
-                ? 'text-black hover:bg-black hover:text-white'
+                ? 'text-black hover:!bg-black hover:text-white'
                 : 'text-black hover:bg-gray-300 hover:text-black',
             isExpanded ? 'p-3' : 'p-2 flex justify-center',
             item.requiresAuth && !authStore.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''

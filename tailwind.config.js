@@ -9,11 +9,12 @@ module.exports = {
         'contrast-primary': 'black',
         'contrast-secondary': '#333',
         'contrast-accent': 'white',
-        'contrast-hover': '#444',
+        'contrast-hover': '#000',
       },
       textColor: {
         'contrast-primary': 'white',
         'contrast-secondary': '#eee',
+        'contrast-black': '#000',
       },
       borderColor: {
         'contrast-border': 'black',
