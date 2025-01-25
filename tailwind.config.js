@@ -9,7 +9,7 @@ module.exports = {
         'contrast-primary': 'black',
         'contrast-secondary': '#333',
         'contrast-accent': 'white',
-        'contrast-hover': '#000',
+        'contrast-hover': '#666 ',
       },
       textColor: {
         'contrast-primary': 'white',

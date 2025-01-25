@@ -86,7 +86,7 @@
             xmlns="http://www.w3.org/2000/svg" 
             viewBox="0 0 24 24" 
             fill="currentColor" 
-            class="w-6 h-6 text-green-600 contrast:bg-contrast-primary contrast:text-contrast-primary"
+            class="w-6 h-6 text-green-600 contrast:bg-contrast-primary contrast:text-contrast-primary contrast-hover:bg-contrast-hover"
           >
             <path 
               fill-rule="evenodd" 
