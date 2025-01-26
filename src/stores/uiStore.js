@@ -16,7 +16,7 @@ export const useUIStore = defineStore('ui', {
   actions: {
     setInfoPanelVisibility(isVisible) {
       this.isInfoPanelVisible = isVisible
-      if (!isVisible) {
+      if (!isVisible && this.activeControl === 'info') {
         this.activeControl = null
       }
     },
