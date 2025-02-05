@@ -73,40 +73,21 @@
     <div v-show="openSections.forestInfo" 
          class="border-t border-gray-300 max-h-96 overflow-y-auto ps-2 py-2"
     >
-        <draggable 
-          v-model="forestLayersList"
-          v-bind="dragOptions"
-          item-key="name"
-          class="space-y-2"
-          @change="(event) => handleLayerOrderChange(event, 'FOREST_INFO')"
+    <draggable 
+      v-model="forestLayersList"
+      v-bind="dragOptions"
+      item-key="name"
+      class="space-y-2"
+      @change="(event) => handleLayerOrderChange(event, 'FOREST_INFO')"
+    >
+      <template #item="{ element: layerName }">
+        <div 
+          class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors relative"
+          :class="{ 
+            'bg-blue-100 hover:bg-blue-100': layers[layerName]?.visible,
+            'opacity-75': !authStore.isAuthenticated 
+          }"
         >
-        <template #item="{ element: layerName }">
-          <div 
-            v-if="[
-              'standorte', 
-              'fichte', 
-              'bergahorn',
-              'buche',
-              'douglasie',
-              'eiche',
-              'ela',
-              'esche',
-              'fichte',
-              'kiefer',
-              'kirsche',
-              'schwarzerle',
-              'stieleiche',
-              'tanne',
-              'traubeneiche',
-              'winterlinde',
-              'digitale_flurkarte'
-        ].includes(layerName)"
-            class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors relative"
-            :class="{ 
-              'bg-blue-100 hover:bg-blue-100': layers[layerName]?.visible,
-              'opacity-75': !authStore.isAuthenticated 
-            }"
-          >
             <div class="flex flex-col space-y-2">
               <!-- Main Layer Controls -->
               <div class="flex items-center">
@@ -244,13 +225,11 @@
             class="space-y-2"
             @change="(event) => handleLayerOrderChange(event, 'MAP_CONTENTS')"
           >
-
-          <template #item="{ element: layerName }">
-            <div 
-            v-if="['flurkartenSchnitt', 'kartiergebiete', 'gemeinde', 'landkreis', 'regierungsbezirk'].includes(layerName)"
-            class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors"
-  :class="{ 'bg-blue-100 hover:bg-blue-100': layers[layerName]?.visible }"
->
+            <template #item="{ element: layerName }">
+              <div 
+                class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors"
+                :class="{ 'bg-blue-100 hover:bg-blue-100': layers[layerName]?.visible }"
+              >
   <div class="flex flex-col space-y-2">
     <!-- Main Layer Controls -->
     <div class="flex items-center">
@@ -376,11 +355,10 @@
             class="space-y-2"
             @change="(event) => handleLayerOrderChange(event, 'PROTECTED_AREAS')"
           >
-
             <template #item="{ element: layerName }">
               <div 
-                v-if="['trinkwasser', 'landschaftsschutz', 'naturschutz', 'vogel', 'naturparke', 'ffh'].includes(layerName)"
-                class="space-y-1 p-2 bg-white hover:bg-gray-100 rounded transition-colors"
+                class="space-y-1 p-2 hover:bg-gray-100 rounded transition-colors"
+                :class="{ 'bg-blue-100 hover:bg-blue-100': layers[layerName]?.visible }"
               >
                 <div class="flex flex-col space-y-2">
                   <!-- Main Layer Controls -->

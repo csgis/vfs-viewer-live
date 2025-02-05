@@ -5,7 +5,7 @@ import TileLayer from 'ol/layer/Tile'
 import TileWMS from 'ol/source/TileWMS'
 import VectorTileLayer from 'ol/layer/VectorTile'
 import VectorTileSource from 'ol/source/VectorTile'
-import XYZ from 'ol/source/XYZ'
+// import XYZ from 'ol/source/XYZ'
 import { applyStyle } from 'ol-mapbox-style'
 import { defineStore } from 'pinia'
 
@@ -44,16 +44,16 @@ export const useBackgroundStore = defineStore('background', {
             wrapX: false
           })
         },
-        terrain: {
-          label: 'Gelände',
-          attribution: '© tiles.stadiamaps.com',
-          type: 'xyz',
-          source: () => new XYZ({
-            url: 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}.png',
-            crossOrigin: 'anonymous',
-            maxZoom: 18
-          })
-        },
+        // terrain: {
+        //   label: 'Gelände',
+        //   attribution: '© tiles.stadiamaps.com',
+        //   type: 'xyz',
+        //   source: () => new XYZ({
+        //     url: 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}.png',
+        //     crossOrigin: 'anonymous',
+        //     maxZoom: 18
+        //   })
+        // },
         vectorRelief: {
             label: 'Basemap.de Vektor (Höhenlinien)',
             attribution: '© Basemap.de | Bundesamt für Kartographie und Geodäsie',
