@@ -143,7 +143,7 @@ const initializeMarkerLayer = () => {
         anchor: [0.5, 1]
       })
     }),
-    zIndex: 1000
+    zIndex: 8000
   });
     
   props.map.addLayer(markerLayer);
