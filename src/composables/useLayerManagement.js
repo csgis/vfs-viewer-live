@@ -12,11 +12,19 @@ export function useLayerManagement(providedMap = null) {
   const authStore = useAuthStore()
   const map = ref(providedMap)
   
-  const { layers, legends, layerOrder, layerOpacities } = storeToRefs(layerStore)
+  const { layers, legends, layerOpacities } = storeToRefs(layerStore)
   
   const wmsLayers = new Map()
   const initialized = ref(false)
 
+  watch(() => layers.value, (newLayers) => {
+    Object.entries(newLayers).forEach(([layerName, layerConfig]) => {
+      const layer = wmsLayers.get(layerName)
+      if (layer) {
+        layer.setZIndex(layerConfig.zIndex)
+      }
+    })
+  }, { deep: true })
 
 
   const cleanupLayer = (layerName) => {
@@ -28,58 +36,6 @@ export function useLayerManagement(providedMap = null) {
       layer.dispose()
       wmsLayers.delete(layerName)
     }
-  }
-
-  const createWMSLayer = (layerName) => {
-    const layerConfig = layerStore.layers[layerName]
-    const wmsConfig = layerStore.getLayerWmsConfig(layerName)
-    
-    let sourceConfig = {
-      url: wmsConfig.url,
-      params: {
-        'LAYERS': layerConfig.sourceLayer,
-        'FORMAT': 'image/png',
-        'TRANSPARENT': true,
-        'VERSION': wmsConfig.version
-      },
-      crossOrigin: 'anonymous',
-      ratio: 1,
-      wrapX: false
-    }
-
-    if (layerConfig.style) {
-      sourceConfig.params['STYLES'] = layerConfig.style
-    }
-
-    if (layerStore.layerNeedsBearer(layerName)) {
-      sourceConfig = {
-        ...sourceConfig,
-        imageLoadFunction: (image, src) => {
-          fetch(src, {
-            headers: authStore.authHeaders,
-            credentials: 'include'
-          })
-            .then(response => response.blob())
-            .then(blob => {
-              const url = URL.createObjectURL(blob)
-              image.getImage().src = url
-            })
-            .catch(error => {
-              console.error('Error loading WMS image:', error)
-            })
-        }
-      }
-    }
-
-    return new ImageLayer({
-      source: new ImageWMS(sourceConfig),
-      zIndex: layerConfig.zIndex,
-      opacity: layerOpacities.value[layerName] / 100,
-      properties: {
-        name: layerName,
-        layerKey: layerConfig.style ? `${layerConfig.sourceLayer}_${layerConfig.style}` : layerConfig.sourceLayer
-      }
-    })
   }
 
 
@@ -158,63 +114,121 @@ export function useLayerManagement(providedMap = null) {
     }
   }
 
-  const toggleLayer = (layerName) => {
-    if (!map.value) {
-      console.warn(`Cannot toggle layer ${layerName}: no map available`)
-      return
-    }
+// In useLayerManagement.js
+const toggleLayer = (layerName) => {
+  if (!map.value) {
+    console.warn(`Cannot toggle layer ${layerName}: no map available`)
+    return
+  }
+
+  if (layerStore.isLayerProtected(layerName) && !authStore.isAuthenticated) {
+    console.log('Cannot toggle protected layer - user not authenticated')
+    return
+  }
+
+  const currentlyActive = layers.value[layerName]?.visible ?? false
+  const newVisibility = !currentlyActive
   
-    if (layerStore.isLayerProtected(layerName) && !authStore.isAuthenticated) {
-      console.log('Cannot toggle protected layer - user not authenticated')
-      return
-    }
+  console.log(`Toggling ${layerName} from ${currentlyActive} to ${newVisibility}`)
+
+  layerStore.setLayerVisibility(layerName, newVisibility)
   
-    // Get current visibility state
-    const currentlyActive = layers.value[layerName]?.visible ?? false
-    const newVisibility = !currentlyActive
-    
-    console.log(`Toggling ${layerName} from ${currentlyActive} to ${newVisibility}`)
+  const mapLayers = map.value.getLayers()
+  const style = layerStore.getLayerStyle(layerName)
+  const sourceLayer = layerStore.getLayerSource(layerName)
+  const layerKey = style ? `${sourceLayer}_${style}` : sourceLayer
   
-    // Update store visibility
-    layerStore.setLayerVisibility(layerName, newVisibility)
-    
-    // Get all layers from the map
-    const mapLayers = map.value.getLayers().getArray()
-    
-    // Find the specific layer using the layerKey
-    const style = layerStore.getLayerStyle(layerName)
-    const sourceLayer = layerStore.getLayerSource(layerName)
-    const layerKey = style ? `${sourceLayer}_${style}` : sourceLayer
-    
-    const existingLayer = mapLayers.find(layer => 
-      layer.get('name') === layerName && 
-      layer.get('layerKey') === layerKey
-    )
-  
-    if (!newVisibility && existingLayer) {
-      // We're turning the layer off
-      console.log('Removing layer from map:', layerName)
+  const existingLayer = mapLayers.getArray().find(layer => 
+    layer.get('name') === layerName && 
+    layer.get('layerKey') === layerKey
+  )
+
+  if (!newVisibility && existingLayer) {
+    map.value.removeLayer(existingLayer)
+    wmsLayers.delete(layerName)
+    layerStore.setLegendUrl(layerName, null)
+  } else if (newVisibility) {
+    if (existingLayer) {
       map.value.removeLayer(existingLayer)
       wmsLayers.delete(layerName)
-      layerStore.setLegendUrl(layerName, null)
-    } else if (newVisibility) {
-      // We're turning the layer on
-      console.log('Creating new layer:', layerName)
-      
-      // Clean up existing layer if any
-      if (existingLayer) {
-        console.log('Removing existing layer before creating new one')
-        map.value.removeLayer(existingLayer)
-        wmsLayers.delete(layerName)
+    }
+    
+    const newLayer = createWMSLayer(layerName)
+    wmsLayers.set(layerName, newLayer)
+
+    // Find proper insertion position based on zIndex
+    const layerArray = mapLayers.getArray()
+    const insertionIndex = layerArray.findIndex(layer => {
+      // Get zIndex, defaulting to 0 if not set
+      const layerZIndex = layer.getZIndex() || 0
+      return layerZIndex > newLayer.getZIndex()
+    })
+
+    if (insertionIndex === -1) {
+      mapLayers.push(newLayer)
+    } else {
+      mapLayers.insertAt(insertionIndex, newLayer)
+    }
+
+    loadLegend(layerName)
+  }
+}
+
+// Update the createWMSLayer function to ensure zIndex is set correctly
+const createWMSLayer = (layerName) => {
+  const layerConfig = layerStore.layers[layerName]
+  const wmsConfig = layerStore.getLayerWmsConfig(layerName)
+  
+  let sourceConfig = {
+    url: wmsConfig.url,
+    params: {
+      'LAYERS': layerConfig.sourceLayer,
+      'FORMAT': 'image/png',
+      'TRANSPARENT': true,
+      'VERSION': wmsConfig.version
+    },
+    crossOrigin: 'anonymous',
+    ratio: 1,
+    wrapX: false
+  }
+
+  if (layerConfig.style) {
+    sourceConfig.params['STYLES'] = layerConfig.style
+  }
+
+  if (layerStore.layerNeedsBearer(layerName)) {
+    sourceConfig = {
+      ...sourceConfig,
+      imageLoadFunction: (image, src) => {
+        fetch(src, {
+          headers: authStore.authHeaders,
+          credentials: 'include'
+        })
+          .then(response => response.blob())
+          .then(blob => {
+            const url = URL.createObjectURL(blob)
+            image.getImage().src = url
+          })
+          .catch(error => {
+            console.error('Error loading WMS image:', error)
+          })
       }
-      
-      // Create and add new layer
-      const newLayer = createWMSLayer(layerName)
-      wmsLayers.set(layerName, newLayer)
-      map.value.addLayer(newLayer)
-      loadLegend(layerName)
     }
   }
+
+  const layer = new ImageLayer({
+    source: new ImageWMS(sourceConfig),
+    // Use the zIndex directly from the store
+    zIndex: layerConfig.zIndex,
+    opacity: layerOpacities.value[layerName] / 100,
+    properties: {
+      name: layerName,
+      layerKey: layerConfig.style ? `${layerConfig.sourceLayer}_${layerConfig.style}` : layerConfig.sourceLayer
+    }
+  })
+
+  return layer
+}
 
   
   const initializeLayers = () => {
@@ -274,31 +288,7 @@ export function useLayerManagement(providedMap = null) {
 
 
 
-  const updateLayerZIndices = () => {
-    const protectedLayers = layerOrder.value.filter(name => 
-      ['trinkwasser', 'landschaftsschutz', 'naturschutz'].includes(name)
-    )
-    
-    const nonProtectedLayers = layerOrder.value.filter(name => 
-      !['trinkwasser', 'landschaftsschutz', 'naturschutz', 'vogel','ffh','naturparke'].includes(name)
-    )
 
-    nonProtectedLayers.forEach((layerName, index) => {
-      const layer = wmsLayers.get(layerName)
-      if (layer) {
-        layer.setZIndex((nonProtectedLayers.length - index) * 10)
-      }
-    })
-
-    protectedLayers.forEach((layerName, index) => {
-      const layer = wmsLayers.get(layerName)
-      if (layer) {
-        layer.setZIndex(1000 + (protectedLayers.length - index) * 10)
-      }
-    })
-
-    layerStore.updateLayerOrder(layerOrder.value)
-  }
 
 
 
@@ -344,10 +334,8 @@ export function useLayerManagement(providedMap = null) {
   return {
     layers,
     legends,
-    layerOrder,
     getLayerLabel: layerStore.getLayerLabel,
     toggleLayer,
-    updateLayerZIndices,
     wmsLayers,
     layerOpacities,
     updateLayerOpacity,

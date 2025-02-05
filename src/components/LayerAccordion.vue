@@ -73,13 +73,13 @@
     <div v-show="openSections.forestInfo" 
          class="border-t border-gray-300 max-h-96 overflow-y-auto ps-2 py-2"
     >
-      <draggable 
-        v-model="layerOrder"
-        v-bind="dragOptions"
-        item-key="name"
-        class="space-y-2"
-        @change="handleLayerOrderChange"
-      >
+        <draggable 
+          v-model="forestLayersList"
+          v-bind="dragOptions"
+          item-key="name"
+          class="space-y-2"
+          @change="(event) => handleLayerOrderChange(event, 'FOREST_INFO')"
+        >
         <template #item="{ element: layerName }">
           <div 
             v-if="[
@@ -238,11 +238,11 @@
         </button>
         <div v-show="openSections.mapContents" class="border-t border-gray-300 max-h-96 overflow-y-auto ps-2 py-2">
           <draggable 
-            v-model="layerOrder"
+            v-model="mapContentLayersList"
             v-bind="dragOptions"
             item-key="name"
             class="space-y-2"
-            @change="handleLayerOrderChange"
+            @change="(event) => handleLayerOrderChange(event, 'MAP_CONTENTS')"
           >
 
           <template #item="{ element: layerName }">
@@ -370,12 +370,13 @@
         </button>
         <div v-show="openSections.protectedAreas" class="border-t border-gray-300 max-h-96 overflow-y-auto px-2 py-2">
           <draggable 
-            v-model="layerOrder"
+            v-model="protectedAreaLayersList"
             v-bind="dragOptions"
             item-key="name"
             class="space-y-2"
-            @change="handleLayerOrderChange"
+            @change="(event) => handleLayerOrderChange(event, 'PROTECTED_AREAS')"
           >
+
             <template #item="{ element: layerName }">
               <div 
                 v-if="['trinkwasser', 'landschaftsschutz', 'naturschutz', 'vogel', 'naturparke', 'ffh'].includes(layerName)"
@@ -522,15 +523,13 @@
   </Teleport>
 </template>
 
-<script setup>
-import { ref, watch, onUnmounted, defineProps } from 'vue'
+<script setup>import { ref, watch, onUnmounted, defineProps } from 'vue'
 import { useLayerManagement } from '../composables/useLayerManagement'
+import { useLayerStore } from '../stores/layerStore'
 import draggable from 'vuedraggable'
 import { useAuthStore } from '../stores/authStore'
 import { useBackgroundStore } from '../stores/backgroundStore'
 import { storeToRefs } from 'pinia'
-const backgroundStore = useBackgroundStore()
-const { selectedBackground } = storeToRefs(backgroundStore)
 
 const props = defineProps({
   map: {
@@ -539,20 +538,41 @@ const props = defineProps({
   }
 })
 
+// Initialize stores
+const layerStore = useLayerStore()
+const authStore = useAuthStore()
+const backgroundStore = useBackgroundStore()
+const { selectedBackground } = storeToRefs(backgroundStore)
+
+// Get layer management functionality
 const {
   layers,
   legends,
-  layerOrder,
   getLayerLabel,
   toggleLayer,
-  updateLayerZIndices,
   wmsLayers,
   layerOpacities,
   updateLayerOpacity,
   isLayerAvailable
 } = useLayerManagement(props.map)
 
-const authStore = useAuthStore()
+// Layer lists for draggable
+const forestLayersList = ref([])
+const mapContentLayersList = ref([])
+const protectedAreaLayersList = ref([])
+
+// Watch the computed values and update our refs
+watch(() => layerStore.getLayersByGroup('FOREST_INFO'), (newLayers) => {
+  forestLayersList.value = [...newLayers]
+}, { immediate: true })
+
+watch(() => layerStore.getLayersByGroup('MAP_CONTENTS'), (newLayers) => {
+  mapContentLayersList.value = [...newLayers]
+}, { immediate: true })
+
+watch(() => layerStore.getLayersByGroup('PROTECTED_AREAS'), (newLayers) => {
+  protectedAreaLayersList.value = [...newLayers]
+}, { immediate: true })
 
 // Draggable configuration
 const dragOptions = {
@@ -582,35 +602,35 @@ const tooltipStyle = ref({})
 
 // Layer information texts
 const layerInfo = {
-        flurkartenSchnitt: 'Quelle: © Bayerische Vermessungsverwaltung',
-        regierungsbezirk: 'Quelle: © Bayerische Vermessungsverwaltung',
-        landkreis: 'Quelle: © Bayerische Vermessungsverwaltung',
-        gemeinde: 'Quelle: © Bayerische Vermessungsverwaltung',
-        kartiergebiete: 'Quelle: VFS-München; Übersichtslayer zum Kartiergebiet',
-        trinkwasser: 'Quelle: Bayerisches Landesamt für Umwelt, www.lfu.bayern.de',
-        landschaftsschutz: 'Quelle: Bayerisches Landesamt für Umwelt, www.lfu.bayern.de',
-        naturschutz: 'Quelle: Bayerisches Landesamt für Umwelt, www.lfu.bayern.de',
-        vogel: 'Quelle: Bayerisches Landesamt für Umwelt, www.lfu.bayern.de',
-        naturparke: 'Quelle: Bayerisches Landesamt für Umwelt, www.lfu.bayern.de',
-        ffh: 'Quelle: Bayerisches Landesamt für Umwelt, www.lfu.bayern.de',
-        soilNutrients: '',
-        alkisParzellarkarte: 'Quelle: https://geodatenonline.bayern.de; Der ALKIS®-Parzellarkarte-WMS ist nach dem Vorbild der ALKIS®-Flurkarte gebaut, beinhaltet aber Objekte der Flurkarte ohne Flurstücksnummern, ohne Grenzzeichen und ohne Unterscheidung der Grenzen, mit Gebäuden, Lagebezeichnungen und TN-Objekten.',
-        standorte: 'Quelle: VfS München; Detaillayer zu einzelnen VfS Standorte',
-        digitale_flurkarte: 'Quelle: https://geodatenonline.bayern.de; Der Layer beinhaltet Flurstücke mit Flurstücksnummern und Grenzzeichen, Gebäude, Bauwerke und Bauteile ohne die Tatsächliche Nutzung. In der Gelb-Darstellung werden Flächen nicht ausgefüllt sondern nur Konturen in gelb dargestellt. Dieser Layer dient zur Überlagerung mit anderen Informationen. Die Darstellung ist für den Maßstab 1:1000 optimiert.',
-        bergahorn: 'Quelle: VFS-München; Detailansicht der Baumart',
-        buche: 'Quelle: VFS-München; Detailansicht der Baumart',
-        douglasie: 'Quelle: VFS-München; Detailansicht der Baumart',
-        eiche: 'Quelle: VFS-München; Detailansicht der Baumart',
-        ela: 'Quelle: VFS-München; Detailansicht der Baumart',
-        esche: 'Quelle: VFS-München; Detailansicht der Baumart',
-        fichte: 'Quelle: VFS-München; Detailansicht der Baumart',
-        kiefer: 'Quelle: VFS-München; Detailansicht der Baumart',
-        kirsche: 'Quelle: VFS-München; Detailansicht der Baumart',
-        schwarzerle: 'Quelle: VFS-München; Detailansicht der Baumart',
-        stieleiche: 'Quelle: VFS-München; Detailansicht der Baumart',
-        tanne: 'Quelle: VFS-München; Detailansicht der Baumart',
-        traubeneiche: 'Quelle: VFS-München; Detailansicht der Baumart',
-        winterlinde: 'Quelle: VFS-München; Detailansicht der Baumart',
+  flurkartenSchnitt: 'Quelle: © Bayerische Vermessungsverwaltung',
+  regierungsbezirk: 'Quelle: © Bayerische Vermessungsverwaltung',
+  landkreis: 'Quelle: © Bayerische Vermessungsverwaltung',
+  gemeinde: 'Quelle: © Bayerische Vermessungsverwaltung',
+  kartiergebiete: 'Quelle: VFS-München; Übersichtslayer zum Kartiergebiet',
+  trinkwasser: 'Quelle: Bayerisches Landesamt für Umwelt, www.lfu.bayern.de',
+  landschaftsschutz: 'Quelle: Bayerisches Landesamt für Umwelt, www.lfu.bayern.de',
+  naturschutz: 'Quelle: Bayerisches Landesamt für Umwelt, www.lfu.bayern.de',
+  vogel: 'Quelle: Bayerisches Landesamt für Umwelt, www.lfu.bayern.de',
+  naturparke: 'Quelle: Bayerisches Landesamt für Umwelt, www.lfu.bayern.de',
+  ffh: 'Quelle: Bayerisches Landesamt für Umwelt, www.lfu.bayern.de',
+  soilNutrients: '',
+  alkisParzellarkarte: 'Quelle: https://geodatenonline.bayern.de; Der ALKIS®-Parzellarkarte-WMS ist nach dem Vorbild der ALKIS®-Flurkarte gebaut, beinhaltet aber Objekte der Flurkarte ohne Flurstücksnummern, ohne Grenzzeichen und ohne Unterscheidung der Grenzen, mit Gebäuden, Lagebezeichnungen und TN-Objekten.',
+  standorte: 'Quelle: VfS München; Detaillayer zu einzelnen VfS Standorte',
+  digitale_flurkarte: 'Quelle: https://geodatenonline.bayern.de; Der Layer beinhaltet Flurstücke mit Flurstücksnummern und Grenzzeichen, Gebäude, Bauwerke und Bauteile ohne die Tatsächliche Nutzung. In der Gelb-Darstellung werden Flächen nicht ausgefüllt sondern nur Konturen in gelb dargestellt. Dieser Layer dient zur Überlagerung mit anderen Informationen. Die Darstellung ist für den Maßstab 1:1000 optimiert.',
+  bergahorn: 'Quelle: VFS-München; Detailansicht der Baumart',
+  buche: 'Quelle: VFS-München; Detailansicht der Baumart',
+  douglasie: 'Quelle: VFS-München; Detailansicht der Baumart',
+  eiche: 'Quelle: VFS-München; Detailansicht der Baumart',
+  ela: 'Quelle: VFS-München; Detailansicht der Baumart',
+  esche: 'Quelle: VFS-München; Detailansicht der Baumart',
+  fichte: 'Quelle: VFS-München; Detailansicht der Baumart',
+  kiefer: 'Quelle: VFS-München; Detailansicht der Baumart',
+  kirsche: 'Quelle: VFS-München; Detailansicht der Baumart',
+  schwarzerle: 'Quelle: VFS-München; Detailansicht der Baumart',
+  stieleiche: 'Quelle: VFS-München; Detailansicht der Baumart',
+  tanne: 'Quelle: VFS-München; Detailansicht der Baumart',
+  traubeneiche: 'Quelle: VFS-München; Detailansicht der Baumart',
+  winterlinde: 'Quelle: VFS-München; Detailansicht der Baumart'
 }
 
 // Methods
@@ -618,8 +638,31 @@ const toggleSection = (section) => {
   openSections.value[section] = !openSections.value[section]
 }
 
-const handleLayerOrderChange = () => {
-  updateLayerZIndices()
+const handleLayerOrderChange = (event, group) => {
+  const { moved } = event
+  if (moved) {
+    const { element: layerName, newIndex } = moved
+    
+    // Update the store
+    layerStore.updateLayerZIndex(layerName, newIndex, group)
+    
+    // Update local list order to match
+    switch(group) {
+      case 'FOREST_INFO':
+        forestLayersList.value = layerStore.getLayersByGroup('FOREST_INFO')
+        break
+      case 'MAP_CONTENTS':
+        mapContentLayersList.value = layerStore.getLayersByGroup('MAP_CONTENTS')
+        break
+      case 'PROTECTED_AREAS':
+        protectedAreaLayersList.value = layerStore.getLayersByGroup('PROTECTED_AREAS')
+        break
+    }
+  }
+}
+
+const getLayerInfo = (layerName) => {
+  return layerInfo[layerName] || "Information about this layer will be added soon."
 }
 
 const isLegendLarge = (layerName) => {
@@ -649,10 +692,6 @@ const closeLegendModal = () => {
   selectedLegendTitle.value = ''
 }
 
-const getLayerInfo = (layerName) => {
-  return layerInfo[layerName] || "Information about this layer will be added soon."
-}
-
 const updateTooltipPosition = (event, layerName) => {
   hoveredLayer.value = layerName
   tooltipStyle.value = {
@@ -661,7 +700,7 @@ const updateTooltipPosition = (event, layerName) => {
   }
 }
 
-
+// Watch for authentication changes
 watch(
   () => authStore.isAuthenticated,
   (isAuthenticated) => {
