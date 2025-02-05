@@ -35,7 +35,7 @@
                     Die forstliche Standortserkundung erstellt detaillierte Bodenkarten des Waldes. Dabei werden alle wichtigen Standortfaktoren berücksichtigt: Klima, Vegetation, Relief, Geologie sowie menschliche Einflüsse. Diese umfassende Analyse wird in der Forstlichen Standortskarte dokumentiert und dient als Grundlage für die nachhaltige Waldbewirtschaftung.
                   </p>
                   <p class=" leading-relaxed">
-                    Ziel ist die Erstellung detaillierter Standortskarten und Baumarteneignungstabellen für eine nachhaltige Waldwirtschaft.
+                    Der Verein für forstliche Standortserkundung (<a href="https://www.vfs-muenchen.de/" class="underline" target="_blank">vfs-muenchen.de</a> ) erstellt detaillierte Standortkarten und Baumarteneignungstabellen. Diese Informationen dienen einer nachhaltigen Waldwirtschaft. Sie stehen den bayerischen Waldbesitzervereinigungen im passwortgeschützten Bereich zur Verfügung und richten sich an Privat- und Körperschaftswälder.
                   </p>
                 </div>
               </div>

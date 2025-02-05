@@ -52,7 +52,7 @@
     <div v-show="map" class="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-50">
       <!-- Home button -->
       <TooltipButton
-        tooltip="Startansicht"
+        tooltip="Zeige gesamte Karte"
         :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.accessibilityMode === 'highContrast'
             ? '!bg-white !border-black hover:!bg-gray-200'
@@ -65,7 +65,7 @@
 
       <!-- City search -->
       <TooltipButton
-        tooltip="Stadt suchen"
+        tooltip="Adresse suchen"
         :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.accessibilityMode === 'highContrast'
             ? uiStore.activeControl === 'city-search'
@@ -86,7 +86,7 @@
 
       <!-- Help Button -->
       <TooltipButton
-        tooltip="Hilfe öffnen"
+        tooltip="Hilfe Dokument"
         :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.accessibilityMode === 'highContrast'
             ? '!bg-white !border-black hover:!bg-gray-200'
@@ -99,7 +99,7 @@
 
       <!-- Navigate Back Button -->
       <TooltipButton
-        tooltip="Zurück zur vorherigen Ansicht"
+        tooltip="Schritt zurück"
         :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.accessibilityMode === 'highContrast'
             ? navigateBackRef?.hasHistory
@@ -121,7 +121,7 @@
 
       <!-- Zoom to Extent Button -->
       <TooltipButton
-          tooltip="Bereich auswählen"
+          tooltip="Kartenauschnitt vergrößern"
           :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
             uiStore.accessibilityMode === 'highContrast'
               ? uiStore.activeControl === 'zoom-extent'
@@ -142,7 +142,7 @@
 
       <!-- Measure Line Button -->
       <TooltipButton
-        tooltip="Strecke messen"
+        tooltip="Entfernung messen"
         :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.accessibilityMode === 'highContrast'
             ? uiStore.activeControl === 'measure-line'
@@ -205,7 +205,7 @@
 
       <!-- Info Button -->
       <TooltipButton
-        tooltip="Karteninhalte abfragen"
+        tooltip="Rauminformationen"
         :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.accessibilityMode === 'highContrast'
             ? uiStore.activeControl === 'info'
@@ -226,7 +226,7 @@
 
       <!-- Print Button -->
       <TooltipButton
-        tooltip="Karte drucken"
+        tooltip="PDF erzeugen"
         :buttonClass="`w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-colors border ${
           uiStore.accessibilityMode === 'highContrast'
             ? uiStore.activeControl === 'print'

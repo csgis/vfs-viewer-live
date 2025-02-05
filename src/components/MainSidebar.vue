@@ -150,16 +150,7 @@
             class="hover:underline  text-gray-500"
         >
             csgis.de
-        </a> & 
-        <a 
-            v-if="isExpanded" 
-            href="http://www.vfs-muenchen.de/" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            class="hover:underline  text-gray-500"
-        >
-            vfs-muenchen.de
-        </a> | 
+        </a>  | 
         <router-link 
             v-if="isExpanded" 
               to="/dsgvo" 

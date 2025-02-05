@@ -8,7 +8,7 @@ const layerDefinitions = {
     visible: false,
     sourceLayer: 'admin_boundaries:flurkarte',
     label: 'Flurkartenschnitt 1:5.000',
-    description: 'Quelle: VFS-München; Flurkartenschnitt',
+    description: 'Quelle: © Bayerische Vermessungsverwaltung',
     zIndex: 7,
     protected: false,
     needsBearer: false,
@@ -59,7 +59,7 @@ const layerDefinitions = {
   kartiergebiete: {
     visible: false,
     sourceLayer: 'vfs:kartiergebiete',
-    label: 'Kartiergebiete des VFS',
+    label: 'Kartiergebiete des VfS',
     description: 'Quelle: VFS-München; Übersichtslayer zum Kartiergebiet',
     zIndex: 5,
     protected: false,

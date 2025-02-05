@@ -6,7 +6,7 @@
           <input 
             type="text"
             v-model="searchQuery"
-            placeholder="Stadt suchen..."
+            placeholder="Adresse suchen..."
             class="w-full p-2 border border-gray-300  pr-10"
           />
           

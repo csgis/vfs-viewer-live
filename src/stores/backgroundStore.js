@@ -13,10 +13,11 @@ export const useBackgroundStore = defineStore('background', {
     state: () => ({
       selectedBackground: 'luftbilder',
       activeLayers: new Map(),
+      currentAttribution: '',
       backgroundDefinitions: {
         none: {
           label: 'Kein Hintergrund',
-          attribution: '',
+          attribution: 'Kein Anbieter',
           type: 'none'
         },
         osm: {
@@ -125,34 +126,36 @@ export const useBackgroundStore = defineStore('background', {
            
               await new Promise(resolve => setTimeout(resolve, 100))
            
-              if (type === 'none') return
-           
               const def = this.backgroundDefinitions[type]
               if (!def) return
            
-              this.currentAttribution = def?.attribution || ''
+              // Set attribution and selectedBackground for all types, including 'none'
+              this.currentAttribution = def.attribution
+              this.selectedBackground = type
+          
+              // Return early if type is 'none' - no layer needed
+              if (type === 'none') return
            
               if (def.type === 'vector') {
                 if (def.sources) {
-                    const layers = await Promise.all(def.sources.map(async source => {
-                      const layer = new VectorTileLayer({
-                        declutter: true,
-                        source: new VectorTileSource({
-                          format: new MVT(),
-                          url: source.url,
-                          maxZoom: source.maxZoom
-                        })
-                      });
-                      await applyStyle(layer, source.styleUrl);
-                      return layer;
-                    }));
-                    
-                    layers.forEach((layer, index) => {
-                        layer.set('isBackground', true);
-                        // Insert heightlines (index 0) after base (index 1)
-                        map.getLayers().insertAt(index === 0 ? 1 : 0, layer);
-                      });
-                  } else {
+                  const layers = await Promise.all(def.sources.map(async source => {
+                    const layer = new VectorTileLayer({
+                      declutter: true,
+                      source: new VectorTileSource({
+                        format: new MVT(),
+                        url: source.url,
+                        maxZoom: source.maxZoom
+                      })
+                    });
+                    await applyStyle(layer, source.styleUrl);
+                    return layer;
+                  }));
+                  
+                  layers.forEach((layer, index) => {
+                    layer.set('isBackground', true);
+                    map.getLayers().insertAt(index === 0 ? 1 : 0, layer);
+                  });
+                } else {
                   const layer = new VectorTileLayer({
                     source: new VectorTileSource({
                       format: new MVT(),
@@ -171,14 +174,12 @@ export const useBackgroundStore = defineStore('background', {
                 layer.set('isBackground', true);
                 map.getLayers().insertAt(0, layer);
               }
-           
-              this.selectedBackground = type
             } catch (error) {
               console.error('Background change failed:', error)
             } finally {
               this.isChanging = false
             }
-           },
+          },
     
         cleanup(map) {
           if (!map) return
@@ -189,6 +190,7 @@ export const useBackgroundStore = defineStore('background', {
               map.removeLayer(layer)
               layer.dispose()
             })
+            this.currentAttribution = ''
         }
       }
     })
