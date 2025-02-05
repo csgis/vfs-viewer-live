@@ -189,34 +189,34 @@ const layerDefinitions = {
       version: '1.3.0'
     }
   },
-  soilNutrients: {
-    visible: false,
-    sourceLayer: '0',
-    label: 'Boden Typ',
-    description: 'Quelle: BGR; Bodenkarte',
-    group: 'MAP_CONTENTS',
-    zIndex: 4,
-    protected: true,
-    needsBearer: false,
-    wmsConfig: {
-      url: 'https://services.bgr.de/wms/boden/buek1000de/',
-      version: '1.3.0'
-    }
-  },
-  alkisParzellarkarte: {
-    visible: false,
-    sourceLayer: 'by_alkis_parzellarkarte_farbe',
-    label: 'ALKIS Parzellarkarte',
-    description: 'Quelle: https://geodatenonline.bayern.de; Der ALKIS®-Parzellarkarte-WMS ist nach dem Vorbild der ALKIS®-Flurkarte gebaut, beinhaltet aber Objekte der Flurkarte ohne Flurstücksnummern, ohne Grenzzeichen und ohne Unterscheidung der Grenzen, mit Gebäuden, Lagebezeichnungen und TN-Objekten.',
-    group: 'MAP_CONTENTS',
-    zIndex: 6,
-    protected: false,
-    needsBearer: false,
-    wmsConfig: {
-      url: 'https://geoservices.bayern.de/od/wms/alkis/v1/parzellarkarte',
-      version: '1.3.0'
-    }
-  },
+  // soilNutrients: {
+  //   visible: false,
+  //   sourceLayer: '0',
+  //   label: 'Boden Typ',
+  //   description: 'Quelle: BGR; Bodenkarte',
+  //   group: 'MAP_CONTENTS',
+  //   zIndex: 4,
+  //   protected: true,
+  //   needsBearer: false,
+  //   wmsConfig: {
+  //     url: 'https://services.bgr.de/wms/boden/buek1000de/',
+  //     version: '1.3.0'
+  //   }
+  // },
+  // alkisParzellarkarte: {
+  //   visible: false,
+  //   sourceLayer: 'by_alkis_parzellarkarte_farbe',
+  //   label: 'ALKIS Parzellarkarte',
+  //   description: 'Quelle: https://geodatenonline.bayern.de; Der ALKIS®-Parzellarkarte-WMS ist nach dem Vorbild der ALKIS®-Flurkarte gebaut, beinhaltet aber Objekte der Flurkarte ohne Flurstücksnummern, ohne Grenzzeichen und ohne Unterscheidung der Grenzen, mit Gebäuden, Lagebezeichnungen und TN-Objekten.',
+  //   group: 'MAP_CONTENTS',
+  //   zIndex: 6,
+  //   protected: false,
+  //   needsBearer: false,
+  //   wmsConfig: {
+  //     url: 'https://geoservices.bayern.de/od/wms/alkis/v1/parzellarkarte',
+  //     version: '1.3.0'
+  //   }
+  // },
   standorte: {
     visible: false,
     sourceLayer: 'vfs:standorte',
