@@ -517,7 +517,7 @@ const initializeMap = () => {
       zoom: zoom,
       minZoom: 7,
       maxZoom: 19,
-      constrainResolution: true,
+      constrainResolution: false,
       smoothResolutionConstraint: true,
       smoothExtentConstraint: true,
     }),
