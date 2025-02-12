@@ -4,7 +4,7 @@
 
 
 const openHelp = () => {
-  window.open('https://vfsviewer-docs.vfs-muenchen.de/', '_blank');
+  window.open('https://vfs-viewer-docs.csgis.de/', '_blank');
 
 };
 
