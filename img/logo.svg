@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="244px" height="251px" viewBox="0 0 244 251" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 56.3 (81716) - https://sketch.com -->
+    <title>Group</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group" transform="translate(-28.000000, -17.000000)">
+            <rect id="Rectangle" fill-opacity="0" fill="#D8D8D8" x="0" y="0" width="300" height="284"></rect>
+            <rect id="Rectangle" fill="#000000" x="80" y="181" width="19" height="87"></rect>
+            <rect id="Rectangle-Copy" fill="#000000" x="202" y="181" width="19" height="87"></rect>
+            <polygon id="Path" fill="#18B42E" points="30 173 81 123 81 173"></polygon>
+            <polygon id="Path-Copy-9" fill="#B41818" transform="translate(123.500000, 146.000000) scale(-1, 1) translate(-123.500000, -146.000000) " points="98 171 149 121 149 171"></polygon>
+            <polygon id="Path-Copy" fill="#B41818" points="30 121 81 71 81 121"></polygon>
+            <polygon id="Path-Copy-8" fill="#18B42E" transform="translate(123.500000, 96.000000) scale(-1, 1) translate(-123.500000, -96.000000) " points="98 121 149 71 149 121"></polygon>
+            <polygon id="Path-Copy-4" fill="#B41818" points="28 67 89 17 89 67"></polygon>
+            <polygon id="Path-Copy-7" fill="#18B42E" transform="translate(119.500000, 42.000000) scale(-1, 1) translate(-119.500000, -42.000000) " points="89 67 150 17 150 67"></polygon>
+            <polygon id="Path-Copy-10" fill="#18B42E" points="150 67 211 17 211 67"></polygon>
+            <polygon id="Path-Copy-11" fill="#B41818" transform="translate(241.500000, 42.000000) scale(-1, 1) translate(-241.500000, -42.000000) " points="211 67 272 17 272 67"></polygon>
+            <polygon id="Path-Copy-2" fill="#18B42E" points="154 121 205 71 205 121"></polygon>
+            <polygon id="Path-Copy-5" fill="#B41818" transform="translate(243.500000, 96.000000) scale(-1, 1) translate(-243.500000, -96.000000) " points="218 121 269 71 269 121"></polygon>
+            <polygon id="Path-Copy-3" fill="#B41818" points="154 171 205 121 205 171"></polygon>
+            <polygon id="Path-Copy-6" fill="#18B42E" transform="translate(243.500000, 146.000000) scale(-1, 1) translate(-243.500000, -146.000000) " points="218 171 269 121 269 171"></polygon>
+        </g>
+    </g>
+</svg>
