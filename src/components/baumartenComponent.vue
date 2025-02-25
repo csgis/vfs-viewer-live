@@ -516,9 +516,11 @@ const getCellClass = (value, mode) => {
 
 // Edit functionality
 const openEditDialog = (item, column) => {
-  currentEdit.value = { item, column }
-  newValue.value = item[column.toLowerCase()]
-  showEditDialog.value = true
+  console.log(item, column)
+  return false;
+  // currentEdit.value = { item, column }
+  // newValue.value = item[column.toLowerCase()]
+  // showEditDialog.value = true
 }
 
 const closeEditDialog = () => {
